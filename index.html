@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="HCS CRM">
+  <title>HCS CRM</title>
+  <link rel="manifest" href="manifest.json">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    :root {
+      --bg: #F8FAFC; --white: #FFFFFF; --gray-50: #F1F5F9; --gray-100: #E2E8F0; --gray-200: #CBD5E1;
+      --gray-500: #64748B; --gray-700: #334155; --gray-900: #0F172A;
+      --blue: #3B82F6; --blue-light: #DBEAFE;
+      --purple: #8B5CF6; --purple-light: #EDE9FE;
+      --orange: #F59E0B; --orange-light: #FEF3C7;
+      --pink: #EC4899; --pink-light: #FCE7F3;
+      --green: #10B981; --green-light: #D1FAE5;
+      --red: #EF4444; --red-light: #FEE2E2;
+      --cyan: #06B6D4; --cyan-light: #CFFAFE;
+      --radius: 16px; --radius-sm: 10px;
+      --shadow: 0 4px 12px rgba(0,0,0,0.08);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    html, body, #root { height: 100%; }
+    body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--gray-900); }
+    .app { min-height: 100%; display: flex; flex-direction: column; }
+
+    /* Header */
+    .header { background: var(--white); padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--gray-100); position: sticky; top: 0; z-index: 50; }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-icon { width: 38px; height: 38px; background: linear-gradient(135deg, var(--blue), var(--purple)); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 16px; }
+    .logo h1 { font-size: 20px; font-weight: 800; }
+    .logo h1 span { color: var(--blue); }
+    .source-badge { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+    .source-badge.ok { background: var(--green-light); color: var(--green); }
+    .source-badge.local { background: var(--orange-light); color: var(--orange); }
+
+    /* Tabs */
+    .tabs { display: flex; background: var(--white); border-bottom: 1px solid var(--gray-100); overflow-x: auto; }
+    .tab { flex: 1; padding: 14px; text-align: center; font-size: 13px; font-weight: 700; color: var(--gray-500); cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; transition: all 0.2s; }
+    .tab:hover { color: var(--gray-700); }
+    .tab.active { color: var(--blue); border-color: var(--blue); }
+    .tab .num { background: var(--gray-100); padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-left: 6px; }
+    .tab.active .num { background: var(--blue-light); color: var(--blue); }
+
+    /* Stats */
+    .stats { display: flex; gap: 10px; padding: 16px 20px; overflow-x: auto; background: var(--white); border-bottom: 1px solid var(--gray-100); }
+    .stat { flex-shrink: 0; padding: 12px 16px; border-radius: var(--radius-sm); min-width: 80px; text-align: center; }
+    .stat.blue { background: var(--blue-light); }
+    .stat.green { background: var(--green-light); }
+    .stat.orange { background: var(--orange-light); }
+    .stat.red { background: var(--red-light); }
+    .stat.purple { background: var(--purple-light); }
+    .stat-val { font-size: 24px; font-weight: 800; }
+    .stat.blue .stat-val { color: var(--blue); }
+    .stat.green .stat-val { color: var(--green); }
+    .stat.orange .stat-val { color: var(--orange); }
+    .stat.red .stat-val { color: var(--red); }
+    .stat.purple .stat-val { color: var(--purple); }
+    .stat-label { font-size: 10px; font-weight: 700; color: var(--gray-500); text-transform: uppercase; margin-top: 2px; }
+
+    /* Search */
+    .search-bar { padding: 16px 20px; background: var(--white); border-bottom: 1px solid var(--gray-100); }
+    .search-input { width: 100%; padding: 12px 16px; border: 2px solid var(--gray-100); border-radius: var(--radius-sm); font-size: 15px; background: var(--gray-50); }
+    .search-input:focus { outline: none; border-color: var(--blue); background: var(--white); }
+
+    /* Content */
+    .content { flex: 1; padding: 16px 20px 120px; overflow-y: auto; }
+
+    /* Kanban */
+    .kanban { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 20px; min-height: 400px; }
+    .kanban-col { flex-shrink: 0; width: 280px; background: var(--gray-50); border-radius: var(--radius); display: flex; flex-direction: column; max-height: 70vh; }
+    .kanban-head { padding: 14px; border-radius: var(--radius) var(--radius) 0 0; display: flex; align-items: center; justify-content: space-between; font-weight: 700; font-size: 13px; }
+    .kanban-head.lead { background: var(--blue-light); color: var(--blue); }
+    .kanban-head.contattato { background: var(--purple-light); color: var(--purple); }
+    .kanban-head.demo { background: var(--orange-light); color: var(--orange); }
+    .kanban-head.proposta { background: var(--pink-light); color: var(--pink); }
+    .kanban-head.chiuso { background: var(--green-light); color: var(--green); }
+    .kanban-head.perso { background: var(--red-light); color: var(--red); }
+    .kanban-count { font-size: 11px; background: rgba(255,255,255,0.7); padding: 3px 8px; border-radius: 10px; }
+    .kanban-body { flex: 1; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+
+    /* Cards */
+    .card { background: var(--white); border-radius: var(--radius-sm); padding: 14px; box-shadow: var(--shadow); cursor: pointer; transition: transform 0.15s; border-left: 4px solid transparent; }
+    .card:active { transform: scale(0.98); }
+    .card.verde { border-left-color: var(--green); }
+    .card.arancione { border-left-color: var(--orange); }
+    .card.rosso { border-left-color: var(--red); }
+    .card-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .card-sub { font-size: 12px; color: var(--gray-500); }
+    .card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+    .tag { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
+    .tag.val { background: var(--green-light); color: var(--green); }
+    .tag.ref { background: var(--gray-100); color: var(--gray-700); }
+    .tag.date { background: var(--cyan-light); color: var(--cyan); }
+
+    /* Archive Grid */
+    .archive-grid { display: flex; flex-direction: column; gap: 10px; }
+    .archive-card { background: var(--white); border-radius: var(--radius-sm); padding: 14px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .archive-card:hover { box-shadow: var(--shadow); }
+    .archive-info h3 { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+    .archive-info p { font-size: 12px; color: var(--gray-500); }
+    .btn { padding: 10px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700; cursor: pointer; border: none; }
+    .btn:active { transform: scale(0.96); }
+    .btn-primary { background: var(--blue); color: white; }
+    .btn-green { background: var(--green); color: white; }
+    .btn-gray { background: var(--gray-100); color: var(--gray-700); }
+
+    /* Empty */
+    .empty { text-align: center; padding: 60px 20px; }
+    .empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .empty h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+    .empty p { color: var(--gray-500); font-size: 14px; }
+
+    /* Modal */
+    .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: flex-end; justify-content: center; }
+    .modal { width: 100%; max-width: 500px; max-height: 90vh; background: var(--white); border-radius: 24px 24px 0 0; display: flex; flex-direction: column; }
+    @media (min-width: 600px) { .modal-bg { align-items: center; padding: 20px; } .modal { border-radius: var(--radius); } }
+    .modal-head { padding: 20px; border-bottom: 1px solid var(--gray-100); display: flex; justify-content: space-between; align-items: start; }
+    .modal-head h2 { font-size: 18px; font-weight: 800; }
+    .modal-head p { font-size: 13px; color: var(--gray-500); margin-top: 2px; }
+    .modal-close { width: 32px; height: 32px; border-radius: 50%; background: var(--gray-100); border: none; font-size: 16px; cursor: pointer; }
+    .modal-body { flex: 1; overflow-y: auto; padding: 20px; }
+    .modal-foot { padding: 16px 20px; border-top: 1px solid var(--gray-100); }
+
+    .actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px; }
+    .action { padding: 12px 8px; background: var(--gray-50); border-radius: var(--radius-sm); text-align: center; cursor: pointer; }
+    .action:active { background: var(--gray-100); }
+    .action-icon { font-size: 20px; }
+    .action-label { font-size: 10px; font-weight: 700; color: var(--gray-500); margin-top: 4px; }
+
+    .form-group { margin-bottom: 14px; }
+    .form-label { font-size: 12px; font-weight: 700; color: var(--gray-500); margin-bottom: 6px; display: block; }
+    .form-input { width: 100%; padding: 12px; border: 2px solid var(--gray-100); border-radius: var(--radius-sm); font-size: 14px; }
+    .form-input:focus { outline: none; border-color: var(--blue); }
+    textarea.form-input { min-height: 70px; resize: vertical; }
+
+    .stage-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .stage-opt { padding: 10px; border-radius: var(--radius-sm); background: var(--gray-50); text-align: center; cursor: pointer; font-size: 12px; font-weight: 700; border: 2px solid transparent; }
+    .stage-opt:hover { background: var(--gray-100); }
+    .stage-opt.active { border-color: var(--blue); background: var(--blue-light); }
+
+    /* Loading */
+    .loading { text-align: center; padding: 40px; }
+    .spinner { width: 32px; height: 32px; border: 3px solid var(--gray-100); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useMemo } = React;
+
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxLjRAr6wRA-aQA-7zWh6PU8IE9q5rw0Ish6xNCodApYecJx1JDMWlWn9oGtli5uFqleQ/exec';
+const STAGES = ['Lead','Contattato','Demo','Proposta','Chiuso','Perso'];
+const ACTIVE_KEY = 'hcs_active_hotels';
+
+function App() {
+  const [archivio, setArchivio] = useState([]);
+  const [attivi, setAttivi] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [source, setSource] = useState('');
+  const [view, setView] = useState('dashboard'); // dashboard, kanban, archivio
+  const [search, setSearch] = useState('');
+  const [selected, setSelected] = useState(null);
+  const [userPos, setUserPos] = useState(null);
+
+  // Load data
+  useEffect(() => {
+    loadData();
+    navigator.geolocation?.getCurrentPosition(p => setUserPos({ lat: p.coords.latitude, lng: p.coords.longitude }));
+  }, []);
+
+  async function loadData() {
+    setLoading(true);
+    // Load active IDs from localStorage
+    const savedActive = JSON.parse(localStorage.getItem(ACTIVE_KEY) || '[]');
+    
+    try {
+      const res = await fetch(SHEETS_URL);
+      const json = await res.json();
+      if (json.success && json.data) {
+        const hotels = json.data.map(h => ({
+          nome: h['Nome'] || '',
+          categoria: h['Categoria'] || '',
+          citta: h['Città'] || '',
+          provincia: h['Provincia'] || '',
+          indirizzo: h['Indirizzo'] || '',
+          telefono: h['Telefono'] || '',
+          sito: h['Sito Web'] || '',
+          rating: h['Rating'] || '',
+          recensioni: h['N° Recensioni'] || '',
+          placeId: h['Place ID Google'] || '',
+          urlMaps: h['URL Maps'] || '',
+          stage: h['Stage CRM'] || '',
+          valore: Number(h['Valore Stimato €']) || 0,
+          referente: h['Referente'] || '',
+          ultimoContatto: h['Ultimo Contatto'] || '',
+          dataRicontatto: h['Data Ricontatto'] || '',
+          note: h['Note'] || '',
+          lat: Number(h['Lat']) || null,
+          lng: Number(h['Lng']) || null
+        })).filter(h => h.nome);
+
+        setArchivio(hotels);
+        // Active = those in localStorage OR those with Stage != Lead and Stage != empty
+        const activeHotels = hotels.filter(h => 
+          savedActive.includes(h.nome) || 
+          (h.stage && h.stage !== 'Lead' && h.ultimoContatto)
+        );
+        setAttivi(activeHotels);
+        setSource('sheets');
+      }
+    } catch (err) {
+      console.error(err);
+      setSource('errore');
+    }
+    setLoading(false);
+  }
+
+  // Add hotel to active
+  function addToActive(hotel) {
+    const newHotel = { ...hotel, stage: 'Lead', ultimoContatto: new Date().toISOString().split('T')[0] };
+    const newAttivi = [...attivi, newHotel];
+    setAttivi(newAttivi);
+    localStorage.setItem(ACTIVE_KEY, JSON.stringify(newAttivi.map(h => h.nome)));
+    // Save to Sheets
+    saveToSheets(hotel.nome, { stage: 'Lead', ultimoContatto: new Date().toISOString().split('T')[0] });
+    setView('dashboard');
+  }
+
+  // Save hotel
+  function saveHotel(updated) {
+    const newAttivi = attivi.map(h => h.nome === updated.nome ? updated : h);
+    setAttivi(newAttivi);
+    localStorage.setItem(ACTIVE_KEY, JSON.stringify(newAttivi.map(h => h.nome)));
+    saveToSheets(updated.nome, {
+      stage: updated.stage,
+      referente: updated.referente,
+      dataRicontatto: updated.dataRicontatto,
+      ultimoContatto: new Date().toISOString().split('T')[0],
+      valore: updated.valore,
+      note: updated.note
+    });
+    setSelected(null);
+  }
+
+  async function saveToSheets(nome, fields) {
+    try {
+      await fetch(SHEETS_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'update', nome, fields })
+      });
+    } catch (err) { console.error(err); }
+  }
+
+  // Semaforo
+  function getSemaforo(h) {
+    if (!h.dataRicontatto) return 'verde';
+    const oggi = new Date(); oggi.setHours(0,0,0,0);
+    const ric = new Date(h.dataRicontatto);
+    const diff = Math.ceil((ric - oggi) / 86400000);
+    if (diff < 0) return 'rosso';
+    if (diff <= 3) return 'arancione';
+    return 'verde';
+  }
+
+  // Distance
+  function getDist(h) {
+    if (!userPos || !h.lat || !h.lng) return null;
+    const R = 6371;
+    const dLat = (h.lat - userPos.lat) * Math.PI / 180;
+    const dLon = (h.lng - userPos.lng) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(userPos.lat*Math.PI/180)*Math.cos(h.lat*Math.PI/180)*Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+
+  // Filtered archive
+  const filteredArchive = useMemo(() => {
+    if (!search || search.length < 2) return [];
+    const q = search.toLowerCase();
+    return archivio
+      .filter(h => !attivi.find(a => a.nome === h.nome))
+      .filter(h => h.nome.toLowerCase().includes(q) || h.citta.toLowerCase().includes(q))
+      .slice(0, 50);
+  }, [archivio, attivi, search]);
+
+  // Stats
+  const stats = useMemo(() => {
+    const verde = attivi.filter(h => getSemaforo(h) === 'verde').length;
+    const arancione = attivi.filter(h => getSemaforo(h) === 'arancione').length;
+    const rosso = attivi.filter(h => getSemaforo(h) === 'rosso').length;
+    const pipeline = attivi.filter(h => h.stage !== 'Chiuso' && h.stage !== 'Perso').reduce((s,h) => s + (h.valore||0), 0);
+    return { totale: attivi.length, verde, arancione, rosso, pipeline };
+  }, [attivi]);
+
+  // Group by stage for kanban
+  const kanbanData = useMemo(() => {
+    const groups = {};
+    STAGES.forEach(s => groups[s] = []);
+    attivi.forEach(h => {
+      const st = h.stage || 'Lead';
+      if (groups[st]) groups[st].push(h);
+    });
+    return groups;
+  }, [attivi]);
+
+  if (loading) {
+    return (
+      <div className="app">
+        <div className="loading">
+          <div className="spinner"></div>
+          <p>Caricamento...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="app">
+      {/* Header */}
+      <div className="header">
+        <div className="logo">
+          <div className="logo-icon">HCS</div>
+          <h1>Hotel<span>CRM</span></h1>
+        </div>
+        <span className={`source-badge ${source === 'sheets' ? 'ok' : 'local'}`}>
+          {source === 'sheets' ? '☁️ Sheets' : '⚠️ Offline'}
+        </span>
+      </div>
+
+      {/* Tabs */}
+      <div className="tabs">
+        <div className={`tab ${view === 'dashboard' ? 'active' : ''}`} onClick={() => setView('dashboard')}>
+          📊 Dashboard<span className="num">{attivi.length}</span>
+        </div>
+        <div className={`tab ${view === 'kanban' ? 'active' : ''}`} onClick={() => setView('kanban')}>
+          📋 Kanban
+        </div>
+        <div className={`tab ${view === 'archivio' ? 'active' : ''}`} onClick={() => setView('archivio')}>
+          📁 Archivio<span className="num">{archivio.length}</span>
+        </div>
+      </div>
+
+      {/* Stats - only in dashboard */}
+      {view === 'dashboard' && attivi.length > 0 && (
+        <div className="stats">
+          <div className="stat blue"><div className="stat-val">{stats.totale}</div><div className="stat-label">Attivi</div></div>
+          <div className="stat green"><div className="stat-val">{stats.verde}</div><div className="stat-label">OK</div></div>
+          <div className="stat orange"><div className="stat-val">{stats.arancione}</div><div className="stat-label">Presto</div></div>
+          <div className="stat red"><div className="stat-val">{stats.rosso}</div><div className="stat-label">Scaduti</div></div>
+          <div className="stat purple"><div className="stat-val">€{(stats.pipeline/1000).toFixed(0)}k</div><div className="stat-label">Pipeline</div></div>
+        </div>
+      )}
+
+      {/* Search - in archivio */}
+      {view === 'archivio' && (
+        <div className="search-bar">
+          <input
+            className="search-input"
+            placeholder="🔍 Cerca hotel per nome o città..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
+      )}
+
+      {/* Content */}
+      <div className="content">
+        {/* Dashboard View */}
+        {view === 'dashboard' && (
+          attivi.length === 0 ? (
+            <div className="empty">
+              <div className="empty-icon">🏨</div>
+              <h3>Nessun hotel attivo</h3>
+              <p>Vai in Archivio e aggiungi il primo hotel!</p>
+              <button className="btn btn-primary" style={{marginTop:16}} onClick={() => setView('archivio')}>📁 Vai all'Archivio</button>
+            </div>
+          ) : (
+            <div className="archive-grid">
+              {attivi.map(h => (
+                <div key={h.nome} className={`card ${getSemaforo(h)}`} onClick={() => setSelected(h)}>
+                  <div className="card-title">{h.nome}</div>
+                  <div className="card-sub">📍 {h.citta} • {h.categoria}</div>
+                  <div className="card-tags">
+                    <span className="tag" style={{background: STAGES.indexOf(h.stage) > -1 ? `var(--${['blue','purple','orange','pink','green','red'][STAGES.indexOf(h.stage)]}-light)` : 'var(--gray-100)', color: STAGES.indexOf(h.stage) > -1 ? `var(--${['blue','purple','orange','pink','green','red'][STAGES.indexOf(h.stage)]})` : 'var(--gray-700)'}}>{h.stage || 'Lead'}</span>
+                    {h.valore > 0 && <span className="tag val">€{(h.valore/1000).toFixed(0)}k</span>}
+                    {h.referente && <span className="tag ref">👤 {h.referente}</span>}
+                    {h.dataRicontatto && <span className="tag date">📅 {new Date(h.dataRicontatto).toLocaleDateString('it-IT',{day:'numeric',month:'short'})}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        )}
+
+        {/* Kanban View */}
+        {view === 'kanban' && (
+          attivi.length === 0 ? (
+            <div className="empty">
+              <div className="empty-icon">📋</div>
+              <h3>Kanban vuoto</h3>
+              <p>Aggiungi hotel dall'Archivio per vederli qui!</p>
+            </div>
+          ) : (
+            <div className="kanban">
+              {STAGES.map((stage, idx) => (
+                <div key={stage} className="kanban-col">
+                  <div className={`kanban-head ${stage.toLowerCase()}`}>
+                    {stage}
+                    <span className="kanban-count">{kanbanData[stage]?.length || 0}</span>
+                  </div>
+                  <div className="kanban-body">
+                    {kanbanData[stage]?.map(h => (
+                      <div key={h.nome} className={`card ${getSemaforo(h)}`} onClick={() => setSelected(h)}>
+                        <div className="card-title">{h.nome}</div>
+                        <div className="card-sub">📍 {h.citta}</div>
+                        <div className="card-tags">
+                          {h.valore > 0 && <span className="tag val">€{(h.valore/1000).toFixed(0)}k</span>}
+                          {h.dataRicontatto && <span className="tag date">📅 {new Date(h.dataRicontatto).toLocaleDateString('it-IT',{day:'numeric',month:'short'})}</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        )}
+
+        {/* Archivio View */}
+        {view === 'archivio' && (
+          <>
+            {search.length < 2 ? (
+              <div className="empty">
+                <div className="empty-icon">🔍</div>
+                <h3>Cerca nell'archivio</h3>
+                <p>{archivio.length} strutture disponibili.<br/>Digita almeno 2 lettere per cercare.</p>
+              </div>
+            ) : filteredArchive.length === 0 ? (
+              <div className="empty">
+                <div className="empty-icon">🤷</div>
+                <h3>Nessun risultato</h3>
+                <p>Prova con un altro termine.</p>
+              </div>
+            ) : (
+              <div className="archive-grid">
+                {filteredArchive.map(h => {
+                  const d = getDist(h);
+                  return (
+                    <div key={h.nome} className="archive-card">
+                      <div className="archive-info">
+                        <h3>{h.nome}</h3>
+                        <p>📍 {h.citta} • {h.categoria}{d !== null && ` • ${d < 1 ? (d*1000).toFixed(0)+'m' : d.toFixed(1)+'km'}`}{h.rating && ` • ⭐${h.rating}`}</p>
+                      </div>
+                      <button className="btn btn-green" onClick={() => addToActive(h)}>+ Lead</button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Modal */}
+      {selected && (
+        <Modal hotel={selected} onClose={() => setSelected(null)} onSave={saveHotel} />
+      )}
+    </div>
+  );
+}
+
+function Modal({ hotel, onClose, onSave }) {
+  const [form, setForm] = useState({
+    stage: hotel.stage || 'Lead',
+    referente: hotel.referente || '',
+    dataRicontatto: hotel.dataRicontatto || '',
+    valore: hotel.valore || '',
+    note: hotel.note || ''
+  });
+
+  const handleSave = () => {
+    onSave({
+      ...hotel,
+      stage: form.stage,
+      referente: form.referente,
+      dataRicontatto: form.dataRicontatto,
+      valore: Number(form.valore) || 0,
+      note: form.note
+    });
+  };
+
+  const openMaps = () => {
+    const url = hotel.urlMaps || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hotel.nome + ' ' + hotel.citta)}`;
+    window.open(url, '_blank');
+  };
+
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-head">
+          <div>
+            <h2>{hotel.nome}</h2>
+            <p>📍 {hotel.citta} • {hotel.categoria}</p>
+          </div>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body">
+          <div className="actions">
+            <div className="action" onClick={() => hotel.telefono && (window.location.href = `tel:${hotel.telefono}`)}>
+              <div className="action-icon">📞</div>
+              <div className="action-label">Chiama</div>
+            </div>
+            <div className="action" onClick={openMaps}>
+              <div className="action-icon">🗺️</div>
+              <div className="action-label">Naviga</div>
+            </div>
+            <div className="action" onClick={() => hotel.sito && window.open(hotel.sito, '_blank')}>
+              <div className="action-icon">🌐</div>
+              <div className="action-label">Sito</div>
+            </div>
+            <div className="action" onClick={openMaps}>
+              <div className="action-icon">📍</div>
+              <div className="action-label">Maps</div>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Stage</label>
+            <div className="stage-grid">
+              {['Lead','Contattato','Demo','Proposta','Chiuso','Perso'].map(s => (
+                <div key={s} className={`stage-opt ${form.stage === s ? 'active' : ''}`} onClick={() => setForm({...form, stage: s})}>{s}</div>
+              ))}
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Referente</label>
+            <input className="form-input" placeholder="Nome referente" value={form.referente} onChange={e => setForm({...form, referente: e.target.value})} />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Data Ricontatto</label>
+            <input className="form-input" type="date" value={form.dataRicontatto} onChange={e => setForm({...form, dataRicontatto: e.target.value})} />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Valore Stimato €</label>
+            <input className="form-input" type="number" placeholder="Es: 5000" value={form.valore} onChange={e => setForm({...form, valore: e.target.value})} />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Note</label>
+            <textarea className="form-input" placeholder="Note..." value={form.note} onChange={e => setForm({...form, note: e.target.value})} />
+          </div>
+        </div>
+        <div className="modal-foot">
+          <button className="btn btn-primary" style={{width:'100%'}} onClick={handleSave}>💾 Salva</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
