@@ -1,0 +1,1559 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="HCS CRM">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="manifest" href="manifest.json">
+  <title>HCS CRM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --bg-page: #F8FAFC;
+      --bg-white: #FFFFFF;
+      --bg-subtle: #F1F5F9;
+      --bg-hover: #E2E8F0;
+      
+      --text-primary: #0F172A;
+      --text-secondary: #475569;
+      --text-muted: #94A3B8;
+      
+      --accent: #6366F1;
+      --accent-light: #E0E7FF;
+      
+      --green: #10B981;
+      --green-light: #D1FAE5;
+      --orange: #F59E0B;
+      --orange-light: #FEF3C7;
+      --red: #EF4444;
+      --red-light: #FEE2E2;
+      --blue: #3B82F6;
+      --blue-light: #DBEAFE;
+      --purple: #8B5CF6;
+      --purple-light: #EDE9FE;
+      --pink: #EC4899;
+      --pink-light: #FCE7F3;
+      --cyan: #06B6D4;
+      --cyan-light: #CFFAFE;
+      
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+      --shadow-lg: 0 12px 40px rgba(0,0,0,0.12);
+      
+      --radius: 16px;
+      --radius-sm: 10px;
+      --radius-xs: 6px;
+      
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body, #root {
+      height: 100%;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      background: var(--bg-page);
+      color: var(--text-primary);
+      line-height: 1.5;
+    }
+
+    /* ============ LAYOUT ============ */
+    .app {
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding-top: var(--safe-top);
+    }
+
+    /* ============ HEADER ============ */
+    .header {
+      background: var(--bg-white);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--bg-subtle);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--purple));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .logo-text {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+
+    .logo-text span {
+      color: var(--accent);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn {
+      padding: 10px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #4F46E5;
+    }
+
+    .btn-secondary {
+      background: var(--bg-subtle);
+      color: var(--text-primary);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-hover);
+    }
+
+    .btn-icon {
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border-radius: 12px;
+      background: var(--bg-subtle);
+      color: var(--text-secondary);
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ============ STATS BAR ============ */
+    .stats-bar {
+      background: var(--bg-white);
+      padding: 16px 24px;
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      border-bottom: 1px solid var(--bg-subtle);
+    }
+
+    .stats-bar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .stat-card {
+      flex-shrink: 0;
+      padding: 14px 20px;
+      border-radius: var(--radius);
+      min-width: 120px;
+      text-align: center;
+    }
+
+    .stat-card.green { background: var(--green-light); }
+    .stat-card.orange { background: var(--orange-light); }
+    .stat-card.red { background: var(--red-light); }
+    .stat-card.blue { background: var(--blue-light); }
+    .stat-card.purple { background: var(--purple-light); }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .stat-card.green .stat-value { color: var(--green); }
+    .stat-card.orange .stat-value { color: var(--orange); }
+    .stat-card.red .stat-value { color: var(--red); }
+    .stat-card.blue .stat-value { color: var(--blue); }
+    .stat-card.purple .stat-value { color: var(--purple); }
+
+    .stat-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ============ GPS BANNER ============ */
+    .gps-banner {
+      background: linear-gradient(135deg, var(--accent), var(--purple));
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      color: white;
+    }
+
+    .gps-banner:active {
+      opacity: 0.95;
+    }
+
+    .gps-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .gps-icon {
+      font-size: 22px;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .gps-text {
+      font-weight: 600;
+    }
+
+    .gps-text small {
+      opacity: 0.85;
+      font-weight: 500;
+    }
+
+    .gps-arrow {
+      font-size: 20px;
+    }
+
+    /* ============ SEARCH & FILTERS ============ */
+    .toolbar {
+      padding: 16px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .search-box {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      background: var(--bg-white);
+      border: 2px solid var(--bg-subtle);
+      border-radius: var(--radius);
+      padding: 0 16px;
+      transition: border-color 0.2s;
+    }
+
+    .search-box:focus-within {
+      border-color: var(--accent);
+    }
+
+    .search-box input {
+      flex: 1;
+      border: none;
+      background: none;
+      padding: 14px 12px;
+      font-size: 15px;
+      color: var(--text-primary);
+      outline: none;
+    }
+
+    .search-box input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .search-icon {
+      color: var(--text-muted);
+      font-size: 18px;
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding-bottom: 4px;
+    }
+
+    .filter-row::-webkit-scrollbar {
+      display: none;
+    }
+
+    .filter-pill {
+      flex-shrink: 0;
+      padding: 10px 18px;
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--bg-white);
+      color: var(--text-secondary);
+      border: 2px solid var(--bg-subtle);
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .filter-pill:active {
+      transform: scale(0.96);
+    }
+
+    .filter-pill.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .filter-pill .count {
+      margin-left: 6px;
+      opacity: 0.75;
+    }
+
+    /* ============ HOTEL LIST ============ */
+    .content {
+      flex: 1;
+      padding: 0 24px 100px;
+    }
+
+    .hotel-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    /* Desktop: 2-3 columns */
+    @media (min-width: 768px) {
+      .hotel-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .hotel-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .hotel-card {
+      background: var(--bg-white);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--bg-subtle);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .hotel-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+
+    .hotel-card:active {
+      transform: scale(0.99);
+    }
+
+    .hotel-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .semaforo {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 4px;
+      box-shadow: 0 0 0 4px currentColor;
+      opacity: 0.2;
+    }
+
+    .semaforo.verde { 
+      background: var(--green); 
+      color: var(--green);
+      box-shadow: 0 0 0 4px var(--green-light);
+      opacity: 1;
+    }
+    .semaforo.arancione { 
+      background: var(--orange); 
+      color: var(--orange);
+      box-shadow: 0 0 0 4px var(--orange-light);
+      opacity: 1;
+    }
+    .semaforo.rosso { 
+      background: var(--red); 
+      color: var(--red);
+      box-shadow: 0 0 0 4px var(--red-light);
+      opacity: 1;
+    }
+
+    .hotel-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .hotel-name {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+      line-height: 1.3;
+    }
+
+    .hotel-location {
+      font-size: 14px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hotel-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .tag {
+      padding: 6px 12px;
+      border-radius: 50px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .tag.lead { background: var(--blue-light); color: var(--blue); }
+    .tag.contattato { background: var(--purple-light); color: var(--purple); }
+    .tag.demo { background: var(--orange-light); color: var(--orange); }
+    .tag.proposta { background: var(--pink-light); color: var(--pink); }
+    .tag.chiuso { background: var(--green-light); color: var(--green); }
+    .tag.perso { background: var(--red-light); color: var(--red); }
+
+    .tag.distance {
+      background: var(--bg-subtle);
+      color: var(--text-secondary);
+    }
+
+    .tag.rating {
+      background: var(--orange-light);
+      color: var(--orange);
+    }
+
+    .tag.date {
+      background: var(--cyan-light);
+      color: var(--cyan);
+    }
+
+    .hotel-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .hotel-actions .btn {
+      flex: 1;
+      justify-content: center;
+      padding: 12px;
+    }
+
+    /* ============ BOTTOM NAV (Mobile) ============ */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-white);
+      border-top: 1px solid var(--bg-subtle);
+      padding: 10px 20px;
+      padding-bottom: calc(10px + var(--safe-bottom));
+      display: flex;
+      justify-content: space-around;
+      z-index: 100;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+    }
+
+    @media (min-width: 768px) {
+      .bottom-nav {
+        display: none;
+      }
+      .content {
+        padding-bottom: 40px;
+      }
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.15s;
+    }
+
+    .nav-item.active {
+      color: var(--accent);
+    }
+
+    .nav-item:active {
+      transform: scale(0.92);
+    }
+
+    .nav-icon {
+      font-size: 24px;
+    }
+
+    .nav-label {
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    /* ============ MODAL ============ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn 0.2s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 600px;
+      max-height: 90vh;
+      background: var(--bg-white);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+      animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (max-width: 767px) {
+      .modal-overlay {
+        align-items: flex-end;
+        padding: 0;
+      }
+      .modal {
+        max-width: 100%;
+        max-height: 92vh;
+        border-radius: 24px 24px 0 0;
+      }
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(40px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--bg-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .modal-close {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--bg-subtle);
+      border: none;
+      color: var(--text-primary);
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+    }
+
+    .modal-close:hover {
+      background: var(--bg-hover);
+    }
+
+    .modal-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+    }
+
+    /* Quick Actions Grid */
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 400px) {
+      .quick-actions {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .quick-action {
+      padding: 16px 12px;
+      background: var(--bg-subtle);
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: 2px solid transparent;
+    }
+
+    .quick-action:hover {
+      background: var(--bg-hover);
+    }
+
+    .quick-action:active {
+      transform: scale(0.96);
+    }
+
+    .quick-action-icon {
+      font-size: 26px;
+    }
+
+    .quick-action-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    /* Form */
+    .form-section {
+      margin-bottom: 24px;
+    }
+
+    .form-section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 14px 16px;
+      background: var(--bg-subtle);
+      border: 2px solid transparent;
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 16px;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus {
+      background: var(--bg-white);
+      border-color: var(--accent);
+    }
+
+    .form-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    textarea.form-input {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    /* Stage Selector */
+    .stage-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    @media (max-width: 400px) {
+      .stage-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .stage-option {
+      padding: 14px 12px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-subtle);
+      border: 2px solid transparent;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .stage-option:active {
+      transform: scale(0.96);
+    }
+
+    .stage-option.selected {
+      border-color: var(--accent);
+      background: var(--accent-light);
+      color: var(--accent);
+    }
+
+    /* Nearby Section */
+    .nearby-section {
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 2px solid var(--bg-subtle);
+    }
+
+    .nearby-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .nearby-title {
+      font-size: 16px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nearby-route-btn {
+      padding: 8px 14px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .nearby-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .nearby-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      background: var(--bg-subtle);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .nearby-item:hover {
+      background: var(--bg-hover);
+    }
+
+    .nearby-item:active {
+      transform: scale(0.99);
+    }
+
+    .nearby-distance {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--accent);
+      min-width: 55px;
+    }
+
+    .nearby-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .nearby-name {
+      font-size: 14px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .nearby-city {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .nearby-arrow {
+      color: var(--text-muted);
+      font-size: 18px;
+    }
+
+    /* Modal Footer */
+    .modal-footer {
+      padding: 16px 24px;
+      padding-bottom: calc(16px + var(--safe-bottom));
+      border-top: 1px solid var(--bg-subtle);
+      background: var(--bg-white);
+    }
+
+    .save-btn {
+      width: 100%;
+      padding: 16px;
+      background: var(--green);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.15s;
+    }
+
+    .save-btn:hover {
+      background: #059669;
+    }
+
+    .save-btn:active {
+      transform: scale(0.98);
+    }
+
+    .save-btn.saving {
+      background: var(--text-muted);
+      pointer-events: none;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+    }
+
+    .empty-icon {
+      font-size: 72px;
+      margin-bottom: 20px;
+    }
+
+    .empty-title {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .empty-text {
+      font-size: 15px;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 767px) {
+      .header {
+        padding: 12px 16px;
+      }
+      .logo-text {
+        font-size: 18px;
+      }
+      .stats-bar {
+        padding: 12px 16px;
+      }
+      .toolbar {
+        padding: 12px 16px;
+      }
+      .content {
+        padding: 0 16px 100px;
+      }
+      .btn span {
+        display: none;
+      }
+    }
+
+    /* Hide on mobile */
+    @media (max-width: 767px) {
+      .desktop-only {
+        display: none;
+      }
+    }
+
+    /* Hide on desktop */
+    @media (min-width: 768px) {
+      .mobile-only {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useMemo, useCallback } = React;
+
+    // ============ GOOGLE SHEETS CONFIG ============
+    // Incolla qui l'URL del tuo Apps Script dopo averlo pubblicato
+    const SHEETS_API_URL = 'https://script.google.com/macros/s/AKfycbxLjRAr6wRA-aQA-7zWh6PU8IE9q5rw0Ish6xNCodApYecJx1JDMWlWn9oGtli5uFqleQ/exec';
+    
+    // ============ SHEETS API FUNCTIONS ============
+    async function fetchFromSheets() {
+      if (!SHEETS_API_URL) return null;
+      try {
+        const res = await fetch(SHEETS_API_URL + '?action=getAll');
+        const data = await res.json();
+        if (data.success) return data.data;
+      } catch (err) {
+        console.error('Errore fetch Sheets:', err);
+      }
+      return null;
+    }
+
+    async function saveToSheets(hotelNome, fields) {
+      if (!SHEETS_API_URL) return false;
+      try {
+        const res = await fetch(SHEETS_API_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'update', nome: hotelNome, fields })
+        });
+        const data = await res.json();
+        return data.success;
+      } catch (err) {
+        console.error('Errore save Sheets:', err);
+        return false;
+      }
+    }
+
+    async function addLogToSheets(entry) {
+      if (!SHEETS_API_URL) return false;
+      try {
+        const res = await fetch(SHEETS_API_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'addLog', entry })
+        });
+        const data = await res.json();
+        return data.success;
+      } catch (err) {
+        console.error('Errore log Sheets:', err);
+        return false;
+      }
+    }
+
+    // Stage configuration
+    const STAGES = [
+      { id: 'lead', label: 'Lead', color: '#3B82F6' },
+      { id: 'contattato', label: 'Contattato', color: '#8B5CF6' },
+      { id: 'demo', label: 'Demo', color: '#F59E0B' },
+      { id: 'proposta', label: 'Proposta', color: '#EC4899' },
+      { id: 'chiuso', label: 'Chiuso', color: '#10B981' },
+      { id: 'perso', label: 'Perso', color: '#EF4444' }
+    ];
+
+    // Demo data
+    const DEMO_DATA = [
+      { id: 1, nome: 'Hotel Principe di Savoia', citta: 'Milano', indirizzo: 'Piazza della Repubblica 17', categoria: 'Hotel 5 stelle', stage: 'demo', rating: 4.6, telefono: '+39 02 62301', sito: 'https://www.dorchestercollection.com', placeId: 'ChIJrTLr-GyuEmsRBfy61i59si0', lat: 45.4818, lng: 9.1981, dataRicontatto: '2026-04-15', note: 'Interessati al sistema camere', valore: 45000, referente: 'Marco Rossi' },
+      { id: 2, nome: 'RSA Villa Serena', citta: 'Bergamo', indirizzo: 'Via Borgo Palazzo 130', categoria: 'Casa di riposo', stage: 'contattato', rating: 4.2, telefono: '+39 035 123456', lat: 45.6983, lng: 9.6773, dataRicontatto: '2026-04-12', note: 'Richiesta preventivo', valore: 28000, referente: 'Dr.ssa Bianchi' },
+      { id: 3, nome: 'Grand Hotel Tremezzo', citta: 'Tremezzina', indirizzo: 'Via Regina 8', categoria: 'Hotel 5 stelle', stage: 'proposta', rating: 4.8, telefono: '+39 0344 42491', sito: 'https://www.grandhoteltremezzo.com', lat: 45.9875, lng: 9.2264, dataRicontatto: '2026-04-18', note: 'Proposta inviata, attendo conferma budget', valore: 85000, referente: 'Valentina Corti' },
+      { id: 4, nome: 'Hotel Excelsior', citta: 'Brescia', indirizzo: 'Via Gramsci 15', categoria: 'Hotel 4 stelle', stage: 'lead', rating: 4.3, telefono: '+39 030 45678', lat: 45.5416, lng: 10.2118 },
+      { id: 5, nome: 'Residenza Campus', citta: 'Pavia', indirizzo: 'Viale Golgi 25', categoria: 'Studentato', stage: 'lead', rating: 4.0, telefono: '+39 0382 987654', lat: 45.1847, lng: 9.1582 },
+      { id: 6, nome: 'Casa di Cura San Pio', citta: 'Monza', indirizzo: 'Via Italia 50', categoria: 'Casa di cura', stage: 'chiuso', rating: 4.5, telefono: '+39 039 321654', lat: 45.5845, lng: 9.2744, note: 'Contratto firmato!', valore: 52000, referente: 'Ing. Fumagalli' }
+    ];
+
+    // Utils
+    function getSemaforo(hotel) {
+      if (!hotel.dataRicontatto && !hotel.dataInserimento) return 'verde';
+      const oggi = new Date(); oggi.setHours(0,0,0,0);
+      
+      if (hotel.dataRicontatto) {
+        const ricontatto = new Date(hotel.dataRicontatto);
+        const diff = Math.ceil((ricontatto - oggi) / 86400000);
+        if (diff < 0) return 'rosso';
+        if (diff <= 3) return 'arancione';
+        return 'verde';
+      }
+      
+      const ins = new Date(hotel.dataInserimento || Date.now());
+      const diff = Math.ceil((oggi - ins) / 86400000);
+      if (diff > 15) return 'rosso';
+      if (diff > 7) return 'arancione';
+      return 'verde';
+    }
+
+    function getDistance(lat1, lon1, lat2, lon2) {
+      if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    function formatDist(km) {
+      if (km === null) return '—';
+      return km < 1 ? `${Math.round(km*1000)}m` : `${km.toFixed(1)}km`;
+    }
+
+    // Components
+    function HotelCard({ hotel, userLat, userLng, onClick }) {
+      const sem = getSemaforo(hotel);
+      const dist = getDistance(userLat, userLng, hotel.lat, hotel.lng);
+
+      const openMaps = (e) => {
+        e.stopPropagation();
+        const url = hotel.placeId 
+          ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hotel.nome)}&query_place_id=${hotel.placeId}`
+          : `https://www.google.com/maps/dir/?api=1&destination=${hotel.lat},${hotel.lng}`;
+        window.open(url, '_blank');
+      };
+
+      const callHotel = (e) => {
+        e.stopPropagation();
+        if (hotel.telefono) window.location.href = `tel:${hotel.telefono}`;
+      };
+
+      return (
+        <div className="hotel-card" onClick={onClick}>
+          <div className="hotel-header">
+            <div className={`semaforo ${sem}`}></div>
+            <div className="hotel-info">
+              <div className="hotel-name">{hotel.nome}</div>
+              <div className="hotel-location">📍 {hotel.citta} — {hotel.indirizzo}</div>
+            </div>
+          </div>
+          
+          <div className="hotel-tags">
+            <span className={`tag ${hotel.stage}`}>{STAGES.find(s=>s.id===hotel.stage)?.label || hotel.stage}</span>
+            {dist !== null && <span className="tag distance">📍 {formatDist(dist)}</span>}
+            {hotel.rating && <span className="tag rating">⭐ {hotel.rating}</span>}
+            {hotel.dataRicontatto && <span className="tag date">📅 {new Date(hotel.dataRicontatto).toLocaleDateString('it-IT', {day:'numeric',month:'short'})}</span>}
+          </div>
+
+          <div className="hotel-actions">
+            <button className="btn btn-secondary" onClick={callHotel}>📞 <span>Chiama</span></button>
+            <button className="btn btn-primary" onClick={openMaps}>🗺️ <span>Naviga</span></button>
+          </div>
+        </div>
+      );
+    }
+
+    function DetailModal({ hotel, hotels, userLat, userLng, onClose, onSave }) {
+      const [form, setForm] = useState({
+        stage: hotel.stage || 'lead',
+        note: hotel.note || '',
+        dataRicontatto: hotel.dataRicontatto || '',
+        valore: hotel.valore || '',
+        referente: hotel.referente || ''
+      });
+      const [saving, setSaving] = useState(false);
+
+      const nearby = useMemo(() => {
+        if (!hotel.lat) return [];
+        return hotels
+          .filter(h => h.id !== hotel.id && h.lat)
+          .map(h => ({ ...h, distance: getDistance(hotel.lat, hotel.lng, h.lat, h.lng) }))
+          .filter(h => h.distance !== null)
+          .sort((a,b) => a.distance - b.distance)
+          .slice(0, 5);
+      }, [hotel, hotels]);
+
+      const handleSave = async () => {
+        setSaving(true);
+        
+        // Salva su Google Sheets se configurato
+        if (SHEETS_API_URL) {
+          await saveToSheets(hotel.nome, {
+            stage: form.stage.charAt(0).toUpperCase() + form.stage.slice(1),
+            referente: form.referente,
+            dataRicontatto: form.dataRicontatto,
+            ultimoContatto: new Date().toISOString().split('T')[0],
+            valore: Number(form.valore) || 0,
+            note: form.note
+          });
+        }
+        
+        await new Promise(r => setTimeout(r, 300));
+        onSave({ ...hotel, ...form, valore: Number(form.valore) || 0 });
+        setSaving(false);
+      };
+
+      const openMaps = () => {
+        const url = hotel.placeId 
+          ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hotel.nome)}&query_place_id=${hotel.placeId}`
+          : `https://www.google.com/maps/dir/?api=1&destination=${hotel.lat},${hotel.lng}`;
+        window.open(url, '_blank');
+      };
+
+      const openRoute = () => {
+        if (nearby.length === 0) return;
+        const wps = nearby.slice(0,4).map(h=>`${h.lat},${h.lng}`).join('|');
+        const last = nearby[Math.min(4, nearby.length-1)];
+        window.open(`https://www.google.com/maps/dir/?api=1&origin=${hotel.lat},${hotel.lng}&destination=${last.lat},${last.lng}&waypoints=${wps}&travelmode=driving`, '_blank');
+      };
+
+      return (
+        <div className="modal-overlay" onClick={onClose}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="modal-title">{hotel.nome}</div>
+              <button className="modal-close" onClick={onClose}>✕</button>
+            </div>
+
+            <div className="modal-body">
+              <div className="quick-actions">
+                <div className="quick-action" onClick={() => hotel.telefono && (window.location.href = `tel:${hotel.telefono}`)}>
+                  <span className="quick-action-icon">📞</span>
+                  <span className="quick-action-label">Chiama</span>
+                </div>
+                <div className="quick-action" onClick={openMaps}>
+                  <span className="quick-action-icon">🗺️</span>
+                  <span className="quick-action-label">Naviga</span>
+                </div>
+                <div className="quick-action" onClick={() => hotel.sito && window.open(hotel.sito, '_blank')}>
+                  <span className="quick-action-icon">🌐</span>
+                  <span className="quick-action-label">Sito</span>
+                </div>
+                <div className="quick-action" onClick={openRoute}>
+                  <span className="quick-action-icon">🛣️</span>
+                  <span className="quick-action-label">Giro</span>
+                </div>
+              </div>
+
+              <div className="form-section">
+                <div className="form-section-title">Stato</div>
+                <div className="stage-grid">
+                  {STAGES.map(s => (
+                    <div key={s.id} className={`stage-option ${form.stage===s.id?'selected':''}`} onClick={() => setForm(f=>({...f, stage: s.id}))}>
+                      {s.label}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="form-section">
+                <div className="form-section-title">Dettagli</div>
+                
+                <div className="form-group">
+                  <label className="form-label">Referente</label>
+                  <input type="text" className="form-input" placeholder="Nome del contatto" value={form.referente} onChange={e => setForm(f=>({...f, referente: e.target.value}))} />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Data Ricontatto</label>
+                  <input type="date" className="form-input" value={form.dataRicontatto} onChange={e => setForm(f=>({...f, dataRicontatto: e.target.value}))} />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Valore Pipeline (€)</label>
+                  <input type="number" className="form-input" placeholder="0" value={form.valore} onChange={e => setForm(f=>({...f, valore: e.target.value}))} />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Note</label>
+                  <textarea className="form-input" placeholder="Aggiungi note..." value={form.note} onChange={e => setForm(f=>({...f, note: e.target.value}))}></textarea>
+                </div>
+              </div>
+
+              {nearby.length > 0 && (
+                <div className="nearby-section">
+                  <div className="nearby-header">
+                    <div className="nearby-title">📍 Strutture Vicine</div>
+                    <button className="nearby-route-btn" onClick={openRoute}>🛣️ Giro ottimizzato</button>
+                  </div>
+                  <div className="nearby-list">
+                    {nearby.map(h => (
+                      <div key={h.id} className="nearby-item" onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&origin=${hotel.lat},${hotel.lng}&destination=${h.lat},${h.lng}`, '_blank')}>
+                        <span className="nearby-distance">{formatDist(h.distance)}</span>
+                        <div className="nearby-info">
+                          <div className="nearby-name">{h.nome}</div>
+                          <div className="nearby-city">{h.citta}</div>
+                        </div>
+                        <span className="nearby-arrow">→</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-footer">
+              <button className={`save-btn ${saving?'saving':''}`} onClick={handleSave}>
+                {saving ? '⏳ Salvataggio...' : '✓ Salva Modifiche'}
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function App() {
+      const [hotels, setHotels] = useState([]);
+      const [search, setSearch] = useState('');
+      const [filter, setFilter] = useState('all');
+      const [selected, setSelected] = useState(null);
+      const [userLat, setUserLat] = useState(45.4642);
+      const [userLng, setUserLng] = useState(9.19);
+      const [gpsOk, setGpsOk] = useState(false);
+      const [loading, setLoading] = useState(true);
+      const [dataSource, setDataSource] = useState('locale');
+      const fileRef = useRef(null);
+
+      // Carica dati da Google Sheets o localStorage
+      useEffect(() => {
+        async function loadData() {
+          setLoading(true);
+          
+          // Prova prima Google Sheets
+          if (SHEETS_API_URL) {
+            const sheetsData = await fetchFromSheets();
+            if (sheetsData && sheetsData.length > 0) {
+              const formatted = sheetsData.map((h, i) => ({
+                id: i + 1,
+                nome: h['Nome'] || '',
+                citta: h['Città'] || '',
+                provincia: h['Provincia'] || '',
+                indirizzo: h['Indirizzo'] || '',
+                categoria: h['Categoria'] || '',
+                tutteCategorie: h['Tutte le categorie'] || '',
+                telefono: h['Telefono'] || '',
+                sito: h['Sito Web'] || '',
+                rating: parseFloat(String(h['Rating']).replace(',', '.')) || null,
+                recensioni: parseInt(h['N° Recensioni']) || 0,
+                placeId: h['Place ID Google'] || '',
+                urlMaps: h['URL Maps'] || '',
+                stage: (h['Stage CRM'] || 'lead').toLowerCase(),
+                valore: parseFloat(h['Valore Stimato €']) || 0,
+                referente: h['Referente'] || '',
+                dataInserimento: h['Data Inserimento'] || '',
+                ultimoContatto: h['Ultimo Contatto'] || '',
+                dataRicontatto: h['Data Ricontatto'] || '',
+                note: h['Note'] || '',
+                canali: h['Canali Reminder'] || '',
+                lat: parseFloat(h['Lat']) || null,
+                lng: parseFloat(h['Lng']) || null
+              }));
+              setHotels(formatted);
+              setDataSource('sheets');
+              setLoading(false);
+              return;
+            }
+          }
+          
+          // Fallback: localStorage
+          const saved = localStorage.getItem('hcs_hotels');
+          if (saved) {
+            setHotels(JSON.parse(saved));
+            setDataSource('locale');
+          } else {
+            setHotels(DEMO_DATA);
+            setDataSource('demo');
+          }
+          setLoading(false);
+        }
+        loadData();
+      }, []);
+      
+      // Salva su localStorage quando cambiano i dati
+      useEffect(() => {
+        if (hotels.length > 0 && dataSource !== 'sheets') {
+          localStorage.setItem('hcs_hotels', JSON.stringify(hotels));
+        }
+      }, [hotels, dataSource]);
+
+      // GPS
+      useEffect(() => {
+        if ('geolocation' in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            p => { setUserLat(p.coords.latitude); setUserLng(p.coords.longitude); setGpsOk(true); },
+            () => {},
+            { enableHighAccuracy: true, timeout: 10000 }
+          );
+        }
+      }, []);
+
+      const filtered = useMemo(() => {
+        let res = hotels;
+        if (search) {
+          const s = search.toLowerCase();
+          res = res.filter(h => h.nome?.toLowerCase().includes(s) || h.citta?.toLowerCase().includes(s));
+        }
+        if (filter !== 'all') res = res.filter(h => h.stage === filter);
+        return res.map(h => ({ ...h, distance: getDistance(userLat, userLng, h.lat, h.lng) }))
+          .sort((a,b) => (a.distance ?? 999) - (b.distance ?? 999));
+      }, [hotels, search, filter, userLat, userLng]);
+
+      const stats = useMemo(() => ({
+        total: hotels.length,
+        verde: hotels.filter(h => getSemaforo(h)==='verde').length,
+        arancione: hotels.filter(h => getSemaforo(h)==='arancione').length,
+        rosso: hotels.filter(h => getSemaforo(h)==='rosso').length,
+        pipeline: hotels.filter(h=>h.stage!=='chiuso'&&h.stage!=='perso').reduce((s,h)=>s+(h.valore||0),0),
+        chiusi: hotels.filter(h=>h.stage==='chiuso').reduce((s,h)=>s+(h.valore||0),0)
+      }), [hotels]);
+
+      const counts = useMemo(() => {
+        const c = { all: hotels.length };
+        STAGES.forEach(s => c[s.id] = hotels.filter(h=>h.stage===s.id).length);
+        return c;
+      }, [hotels]);
+
+      const closest = filtered[0];
+
+      const handleImport = (e) => {
+        const file = e.target.files?.[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          try {
+            const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' });
+            const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+            const imported = data.map((r,i) => ({
+              id: Date.now()+i,
+              nome: r['Nome'] || r['title'] || '',
+              citta: r['Città'] || r['city'] || '',
+              provincia: r['Provincia'] || '',
+              indirizzo: r['Indirizzo'] || r['street'] || '',
+              categoria: r['Categoria'] || r['categoryName'] || '',
+              telefono: r['Telefono'] || r['phone'] || '',
+              sito: r['Sito Web'] || r['website'] || '',
+              rating: parseFloat(String(r['Rating'] || r['totalScore'] || '').replace(',', '.')) || null,
+              recensioni: parseInt(r['N° Recensioni']) || 0,
+              placeId: r['Place ID Google'] || r['placeId'] || '',
+              urlMaps: r['URL Maps'] || '',
+              stage: (r['Stage CRM'] || 'lead').toLowerCase(),
+              valore: parseFloat(r['Valore Stimato €']) || 0,
+              referente: r['Referente'] || '',
+              dataInserimento: r['Data Inserimento'] || new Date().toISOString().split('T')[0],
+              ultimoContatto: r['Ultimo Contatto'] || '',
+              dataRicontatto: r['Data Ricontatto'] || '',
+              note: r['Note'] || '',
+              canali: r['Canali Reminder'] || '',
+              lat: parseFloat(r['Lat']) || null,
+              lng: parseFloat(r['Lng']) || null
+            })).filter(h=>h.nome);
+            setHotels(imported);
+            setDataSource('locale');
+            alert(`✅ Importate ${imported.length} strutture`);
+          } catch { alert('❌ Errore importazione'); }
+        };
+        reader.readAsArrayBuffer(file);
+        e.target.value = '';
+      };
+
+      return (
+        <div className="app">
+          {loading ? (
+            <div style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:'16px'}}>
+              <div style={{width:'48px',height:'48px',border:'4px solid var(--bg-subtle)',borderTopColor:'var(--accent)',borderRadius:'50%',animation:'spin 0.8s linear infinite'}}></div>
+              <div style={{fontSize:'16px',fontWeight:600,color:'var(--text-secondary)'}}>Caricamento dati...</div>
+            </div>
+          ) : (
+            <>
+          {/* Header */}
+          <div className="header">
+            <div className="logo">
+              <div className="logo-icon">H</div>
+              <div className="logo-text">HCS <span>CRM</span></div>
+            </div>
+            <div className="header-actions">
+              {dataSource === 'sheets' && <span style={{fontSize:'12px',color:'var(--green)',fontWeight:600}}>☁️ Sheets</span>}
+              {dataSource === 'locale' && <span style={{fontSize:'12px',color:'var(--orange)',fontWeight:600}}>💾 Locale</span>}
+              {dataSource === 'demo' && <span style={{fontSize:'12px',color:'var(--text-muted)',fontWeight:600}}>📋 Demo</span>}
+              <button className="btn btn-secondary desktop-only" onClick={() => fileRef.current?.click()}>📥 Import</button>
+              <button className="btn btn-primary desktop-only">➕ <span>Nuovo</span></button>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="stats-bar">
+            <div className="stat-card blue">
+              <div className="stat-value">{stats.total}</div>
+              <div className="stat-label">Totale</div>
+            </div>
+            <div className="stat-card green">
+              <div className="stat-value">{stats.verde}</div>
+              <div className="stat-label">OK</div>
+            </div>
+            <div className="stat-card orange">
+              <div className="stat-value">{stats.arancione}</div>
+              <div className="stat-label">Attenzione</div>
+            </div>
+            <div className="stat-card red">
+              <div className="stat-value">{stats.rosso}</div>
+              <div className="stat-label">Urgenti</div>
+            </div>
+            <div className="stat-card purple">
+              <div className="stat-value">€{(stats.pipeline/1000).toFixed(0)}k</div>
+              <div className="stat-label">Pipeline</div>
+            </div>
+          </div>
+
+          {/* GPS Banner */}
+          {gpsOk && closest && (
+            <div className="gps-banner" onClick={() => setSelected(closest)}>
+              <div className="gps-content">
+                <span className="gps-icon">📍</span>
+                <div className="gps-text">
+                  <strong>{closest.nome}</strong><br/>
+                  <small>{formatDist(closest.distance)} — Tocca per aprire</small>
+                </div>
+              </div>
+              <span className="gps-arrow">→</span>
+            </div>
+          )}
+
+          {/* Toolbar */}
+          <div className="toolbar">
+            <div className="search-row">
+              <div className="search-box">
+                <span className="search-icon">🔍</span>
+                <input type="text" placeholder="Cerca hotel, città..." value={search} onChange={e => setSearch(e.target.value)} />
+              </div>
+            </div>
+            <div className="filter-row">
+              <div className={`filter-pill ${filter==='all'?'active':''}`} onClick={() => setFilter('all')}>
+                Tutti <span className="count">{counts.all}</span>
+              </div>
+              {STAGES.map(s => (
+                <div key={s.id} className={`filter-pill ${filter===s.id?'active':''}`} onClick={() => setFilter(s.id)}>
+                  {s.label} <span className="count">{counts[s.id]}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="content">
+            {filtered.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon">🏨</div>
+                <div className="empty-title">Nessuna struttura</div>
+                <div className="empty-text">Importa il database per iniziare</div>
+                <button className="btn btn-primary" onClick={() => fileRef.current?.click()}>📥 Importa XLSX</button>
+              </div>
+            ) : (
+              <div className="hotel-grid">
+                {filtered.map(h => <HotelCard key={h.id} hotel={h} userLat={userLat} userLng={userLng} onClick={() => setSelected(h)} />)}
+              </div>
+            )}
+          </div>
+
+          {/* Hidden input */}
+          <input type="file" ref={fileRef} accept=".xlsx,.xls,.csv" style={{display:'none'}} onChange={handleImport} />
+
+          {/* Bottom Nav (mobile) */}
+          <div className="bottom-nav mobile-only">
+            <div className="nav-item active"><span className="nav-icon">📋</span><span className="nav-label">Lista</span></div>
+            <div className="nav-item"><span className="nav-icon">📍</span><span className="nav-label">Vicini</span></div>
+            <div className="nav-item" onClick={() => fileRef.current?.click()}><span className="nav-icon">📥</span><span className="nav-label">Import</span></div>
+            <div className="nav-item"><span className="nav-icon">📊</span><span className="nav-label">Stats</span></div>
+          </div>
+
+          {/* Modal */}
+          {selected && (
+            <DetailModal 
+              hotel={selected} 
+              hotels={hotels} 
+              userLat={userLat} 
+              userLng={userLng}
+              onClose={() => setSelected(null)} 
+              onSave={(h) => { setHotels(prev => prev.map(x => x.id===h.id ? h : x)); setSelected(null); }} 
+            />
+          )}
+            </>
+          )}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
