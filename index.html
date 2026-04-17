@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="HCS CRM">
+  <meta name="theme-color" content="#0f172a">
+  <title>HCS CRM Hotel</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    :root {
+      --sidebar-bg: #0f172a; --sidebar-hover: #1e293b; --sidebar-active: #3b82f6;
+      --sidebar-text: #94a3b8; --sidebar-text-active: #ffffff;
+      --bg: #f8fafc; --card-bg: #ffffff; --border: #e2e8f0;
+      --text: #1e293b; --text-secondary: #64748b; --text-muted: #94a3b8;
+      --primary: #3b82f6; --primary-light: #dbeafe;
+      --success: #10b981; --success-light: #d1fae5;
+      --warning: #f59e0b; --warning-light: #fef3c7;
+      --danger: #ef4444; --danger-light: #fee2e2;
+      --purple: #8b5cf6; --purple-light: #ede9fe;
+      --cyan: #06b6d4; --cyan-light: #cffafe;
+      --pink: #ec4899; --pink-light: #fce7f3;
+      --radius: 12px; --radius-sm: 8px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.1); --shadow-lg: 0 10px 40px rgba(0,0,0,0.15);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body, #root { height: 100%; overflow: hidden; }
+    body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); }
+    
+    .app { display: flex; height: 100%; }
+    
+    .sidebar { width: 260px; background: var(--sidebar-bg); display: flex; flex-direction: column; flex-shrink: 0; }
+    .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo-icon { width: 42px; height: 42px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; color: white; }
+    .logo-text { font-size: 20px; font-weight: 800; color: white; }
+    .logo-text span { color: #3b82f6; }
+    
+    .sidebar-user { padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 12px; }
+    .user-avatar { width: 36px; height: 36px; background: linear-gradient(135deg, #f59e0b, #ef4444); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: white; }
+    .user-info { flex: 1; }
+    .user-name { font-size: 14px; font-weight: 600; color: white; }
+    .user-role { font-size: 12px; color: var(--sidebar-text); }
+    
+    .sidebar-nav { flex: 1; padding: 12px; overflow-y: auto; }
+    .nav-section { margin-bottom: 20px; }
+    .nav-section-title { font-size: 10px; font-weight: 700; color: var(--sidebar-text); text-transform: uppercase; letter-spacing: 0.5px; padding: 0 12px; margin-bottom: 8px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-sm); cursor: pointer; color: var(--sidebar-text); font-size: 13px; font-weight: 500; margin-bottom: 2px; transition: all 0.15s; }
+    .nav-item:hover { background: var(--sidebar-hover); color: var(--sidebar-text-active); }
+    .nav-item.active { background: var(--sidebar-active); color: white; }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    .nav-badge { margin-left: auto; background: rgba(255,255,255,0.15); padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+    .nav-item.active .nav-badge { background: rgba(255,255,255,0.25); }
+    .nav-dot { width: 8px; height: 8px; border-radius: 50%; margin-left: auto; }
+    .nav-dot.danger { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
+    
+    .sidebar-footer { padding: 12px; border-top: 1px solid rgba(255,255,255,0.1); }
+    .sync-status { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: rgba(16,185,129,0.15); border-radius: var(--radius-sm); font-size: 12px; color: var(--success); font-weight: 500; }
+    .sync-status.error { background: rgba(239,68,68,0.15); color: var(--danger); }
+    
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    
+    .header { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-shrink: 0; }
+    .header-left h1 { font-size: 20px; font-weight: 700; }
+    .header-left p { font-size: 12px; color: var(--text-secondary); }
+    .header-actions { display: flex; gap: 10px; }
+    
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; }
+    .btn:active { transform: scale(0.96); }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-secondary { background: var(--card-bg); border: 1px solid var(--border); color: var(--text); }
+    .btn-success { background: var(--success); color: white; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-sm { padding: 6px 10px; font-size: 12px; }
+    
+    .content { flex: 1; display: flex; overflow: hidden; }
+    .content-main { flex: 1; padding: 16px; overflow-y: auto; }
+    
+    .stats-row { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+    .stat-card { padding: 14px 16px; background: var(--card-bg); border-radius: var(--radius); border-left: 4px solid; min-width: 110px; flex: 1; box-shadow: var(--shadow); }
+    .stat-card.primary { border-left-color: var(--primary); }
+    .stat-card.success { border-left-color: var(--success); }
+    .stat-card.warning { border-left-color: var(--warning); }
+    .stat-card.danger { border-left-color: var(--danger); }
+    .stat-card.purple { border-left-color: var(--purple); }
+    .stat-value { font-size: 24px; font-weight: 800; }
+    .stat-card.primary .stat-value { color: var(--primary); }
+    .stat-card.success .stat-value { color: var(--success); }
+    .stat-card.warning .stat-value { color: var(--warning); }
+    .stat-card.danger .stat-value { color: var(--danger); }
+    .stat-card.purple .stat-value { color: var(--purple); }
+    .stat-label { font-size: 11px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; }
+    
+    .tabs { display: flex; gap: 4px; background: var(--bg); padding: 4px; border-radius: var(--radius-sm); margin-bottom: 16px; }
+    .tab { padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text-secondary); transition: all 0.15s; }
+    .tab:hover { color: var(--text); }
+    .tab.active { background: var(--card-bg); color: var(--text); box-shadow: var(--shadow); }
+    
+    .kanban { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; height: calc(100% - 140px); }
+    .kanban-col { flex: 1; min-width: 160px; max-width: 200px; background: var(--card-bg); border-radius: var(--radius); display: flex; flex-direction: column; box-shadow: var(--shadow); }
+    .kanban-header { padding: 10px 12px; border-bottom: 3px solid; display: flex; align-items: center; justify-content: space-between; }
+    .kanban-header.lead { border-color: var(--primary); }
+    .kanban-header.contattato { border-color: var(--purple); }
+    .kanban-header.demo { border-color: var(--warning); }
+    .kanban-header.proposta { border-color: var(--pink); }
+    .kanban-header.chiuso { border-color: var(--success); }
+    .kanban-header.perso { border-color: var(--danger); }
+    .kanban-title { font-size: 12px; font-weight: 700; text-transform: uppercase; }
+    .kanban-count { font-size: 11px; font-weight: 700; padding: 2px 6px; background: var(--bg); border-radius: 8px; }
+    .kanban-body { flex: 1; padding: 8px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+    
+    .hotel-row { padding: 10px; background: var(--bg); border-radius: var(--radius-sm); cursor: pointer; border-left: 3px solid transparent; transition: all 0.15s; }
+    .hotel-row:hover { background: #e2e8f0; }
+    .hotel-row.verde { border-left-color: var(--success); }
+    .hotel-row.arancione { border-left-color: var(--warning); }
+    .hotel-row.rosso { border-left-color: var(--danger); }
+    .hotel-row-name { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+    .hotel-row-meta { font-size: 11px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .hotel-row-tags { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+    .tag { font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; }
+    .tag.valore { background: var(--success-light); color: var(--success); }
+    .tag.data { background: var(--cyan-light); color: var(--cyan); }
+    .tag.appt { background: var(--pink-light); color: var(--pink); }
+    
+    .list-view { display: flex; flex-direction: column; gap: 8px; }
+    .list-card { display: flex; align-items: center; background: var(--card-bg); border-radius: var(--radius-sm); padding: 12px 16px; box-shadow: var(--shadow); gap: 12px; cursor: pointer; border-left: 4px solid transparent; }
+    .list-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .list-card.verde { border-left-color: var(--success); }
+    .list-card.arancione { border-left-color: var(--warning); }
+    .list-card.rosso { border-left-color: var(--danger); }
+    .list-card-info { flex: 1; min-width: 0; }
+    .list-card-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+    .list-card-meta { font-size: 12px; color: var(--text-secondary); }
+    
+    .right-sidebar { width: 280px; background: var(--card-bg); border-left: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden; }
+    .right-header { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+    .right-title { font-size: 14px; font-weight: 700; }
+    .right-body { flex: 1; padding: 12px; overflow-y: auto; }
+    .right-section { margin-bottom: 20px; }
+    .right-section-title { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 10px; }
+    
+    .reminder-card { padding: 10px 12px; background: var(--bg); border-radius: var(--radius-sm); margin-bottom: 8px; cursor: pointer; border-left: 3px solid; }
+    .reminder-card.danger { border-left-color: var(--danger); background: var(--danger-light); }
+    .reminder-card.warning { border-left-color: var(--warning); background: var(--warning-light); }
+    .reminder-card.appointment { border-left-color: var(--pink); background: var(--pink-light); }
+    .reminder-card-name { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+    .reminder-card-info { font-size: 11px; color: var(--text-secondary); }
+    .reminder-card-date { font-size: 11px; font-weight: 700; margin-top: 4px; }
+    .reminder-card.danger .reminder-card-date { color: var(--danger); }
+    .reminder-card.warning .reminder-card-date { color: var(--warning); }
+    .reminder-card.appointment .reminder-card-date { color: var(--pink); }
+    
+    .search-bar { display: flex; gap: 10px; margin-bottom: 16px; }
+    .search-input { flex: 1; padding: 10px 14px; background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; outline: none; }
+    .search-input:focus { border-color: var(--primary); }
+    
+    .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.6); z-index: 400; display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .modal { width: 100%; max-width: 500px; max-height: 90vh; background: var(--card-bg); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; }
+    .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; }
+    .modal-title { font-size: 16px; font-weight: 700; }
+    .modal-subtitle { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+    .modal-close { width: 28px; height: 28px; border-radius: 50%; background: var(--bg); border: none; cursor: pointer; font-size: 14px; }
+    .modal-body { flex: 1; padding: 16px 20px; overflow-y: auto; }
+    .modal-footer { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; gap: 10px; }
+    
+    .quick-actions { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 16px; }
+    .quick-action { padding: 12px 8px; background: var(--bg); border-radius: var(--radius-sm); display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; border: 2px solid transparent; transition: all 0.15s; }
+    .quick-action:hover { border-color: var(--primary); }
+    .quick-action.recording { border-color: var(--danger); background: var(--danger-light); animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
+    .quick-action-icon { font-size: 20px; }
+    .quick-action-label { font-size: 10px; font-weight: 600; color: var(--text-secondary); }
+    
+    .form-row { display: flex; gap: 10px; margin-bottom: 12px; }
+    .form-group { flex: 1; }
+    .form-label { display: block; font-size: 11px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase; }
+    .form-input { width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; outline: none; }
+    .form-input:focus { border-color: var(--primary); }
+    select.form-input { cursor: pointer; }
+    textarea.form-input { min-height: 70px; resize: vertical; font-family: inherit; }
+    
+    .stage-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; }
+    .stage-opt { padding: 10px 6px; border-radius: var(--radius-sm); background: var(--bg); text-align: center; cursor: pointer; font-size: 11px; font-weight: 600; border: 2px solid transparent; transition: all 0.15s; }
+    .stage-opt:hover { border-color: var(--border); }
+    .stage-opt.active { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+    
+    .motivo-perso { margin-top: 10px; padding: 10px; background: var(--danger-light); border-radius: var(--radius-sm); }
+    
+    .call-list-bar { background: var(--primary); color: white; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
+    .call-list-info { font-size: 13px; font-weight: 600; }
+    .call-list-nav { display: flex; gap: 8px; }
+    
+    .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; }
+    .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+    .empty-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .empty-text { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; }
+    
+    .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+    .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 12px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    @media (max-width: 1024px) {
+      .sidebar { width: 60px; }
+      .logo-text, .user-info, .nav-section-title, .nav-item span:not(.nav-icon), .sync-status span { display: none; }
+      .nav-item { justify-content: center; padding: 12px; }
+      .right-sidebar { display: none; }
+    }
+    
+    @media (max-width: 768px) {
+      .app { flex-direction: column; }
+      .sidebar { width: 100%; height: 60px; flex-direction: row; padding: 0 8px; }
+      .sidebar-header, .sidebar-user, .sidebar-footer, .nav-section-title { display: none; }
+      .sidebar-nav { display: flex; flex-direction: row; padding: 0; overflow-x: auto; align-items: center; }
+      .nav-section { display: flex; margin: 0; }
+      .nav-item { padding: 10px 14px; }
+      .main { height: calc(100% - 60px); }
+      .kanban { flex-direction: column; height: auto; }
+      .kanban-col { max-width: none; min-width: auto; }
+      .stats-row { flex-wrap: nowrap; overflow-x: auto; }
+      .stat-card { min-width: 100px; flex: none; }
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useMemo, useCallback, useRef } = React;
+
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxLjRAr6wRA-aQA-7zWh6PU8IE9q5rw0Ish6xNCodApYecJx1JDMWlWn9oGtli5uFqleQ/exec';
+const STAGES = ['Lead', 'Contattato', 'Demo', 'Proposta', 'Chiuso', 'Perso'];
+const MOTIVI_PERSO = ['Prezzo troppo alto', 'Tempistica non adatta', 'Scelto concorrente', 'Non interessato', 'Non risponde più', 'Altro'];
+const ACTIVE_KEY = 'hcs_active_hotels';
+const SETTINGS_KEY = 'hcs_settings';
+const APPOINTMENTS_KEY = 'hcs_appointments';
+const STATS_KEY = 'hcs_stats';
+
+const DEFAULT_SETTINGS = { defaultReminderDays: 7, afterFirstCallDays: 3, afterDemoDays: 5, afterProposalDays: 7 };
+
+function getSemaforo(h) {
+  if (!h.dataRicontatto) return 'verde';
+  const oggi = new Date(); oggi.setHours(0,0,0,0);
+  const ric = new Date(h.dataRicontatto);
+  const diff = Math.ceil((ric - oggi) / 86400000);
+  if (diff < 0) return 'rosso';
+  if (diff <= 3) return 'arancione';
+  return 'verde';
+}
+
+function getDaysUntil(date) {
+  if (!date) return null;
+  const oggi = new Date(); oggi.setHours(0,0,0,0);
+  return Math.ceil((new Date(date) - oggi) / 86400000);
+}
+
+function formatDate(d) {
+  if (!d) return '';
+  return new Date(d).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
+}
+
+function formatDateTime(d, t) {
+  if (!d) return '';
+  const date = new Date(d).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
+  return t ? date + ' ' + t : date;
+}
+
+function getDistance(lat1, lng1, lat2, lng2) {
+  if (!lat1 || !lng1 || !lat2 || !lng2) return null;
+  const R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLng = (lng2-lng1)*Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function formatDist(km) {
+  if (km === null) return '';
+  return km < 1 ? Math.round(km*1000) + 'm' : km.toFixed(1) + 'km';
+}
+
+function createCalendarUrl(hotel, appointment) {
+  const title = encodeURIComponent('Appuntamento: ' + hotel.nome);
+  const location = encodeURIComponent(hotel.indirizzo + ', ' + hotel.citta);
+  const details = encodeURIComponent('Referente: ' + (hotel.referente || 'N/D') + '\nTelefono: ' + (hotel.telefono || 'N/D') + '\nStage: ' + (hotel.stage || 'Lead') + '\nValore: EUR ' + (hotel.valore || 0) + '\nTipo: ' + (appointment.tipo || 'Visita') + '\n\nNote: ' + (hotel.note || ''));
+  const startDate = appointment.data.replace(/-/g, '');
+  const startTime = (appointment.ora || '10:00').replace(':', '') + '00';
+  const endHour = (parseInt(startTime.slice(0,2)) + 1).toString().padStart(2,'0');
+  const endTime = endHour + startTime.slice(2);
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + title + '&location=' + location + '&details=' + details + '&dates=' + startDate + 'T' + startTime + '/' + startDate + 'T' + endTime;
+}
+
+function App() {
+  const [archivio, setArchivio] = useState([]);
+  const [attivi, setAttivi] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [source, setSource] = useState('');
+  const [userPos, setUserPos] = useState(null);
+  const [settings, setSettings] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || DEFAULT_SETTINGS; } catch(e) { return DEFAULT_SETTINGS; }
+  });
+  const [appointments, setAppointments] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(APPOINTMENTS_KEY)) || {}; } catch(e) { return {}; }
+  });
+  const [weekStats, setWeekStats] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(STATS_KEY)) || { calls: 0, leads: 0, demos: 0, closed: 0, weekStart: new Date().toISOString().split('T')[0] }; } catch(e) { return { calls: 0, leads: 0, demos: 0, closed: 0, weekStart: new Date().toISOString().split('T')[0] }; }
+  });
+  
+  const [activeNav, setActiveNav] = useState('dashboard');
+  const [activeView, setActiveView] = useState('kanban');
+  const [selectedHotel, setSelectedHotel] = useState(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [search, setSearch] = useState('');
+  const [locationSearch, setLocationSearch] = useState('');
+  const [callList, setCallList] = useState([]);
+  const [callListIndex, setCallListIndex] = useState(0);
+
+  useEffect(() => {
+    loadData();
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(p => setUserPos({ lat: p.coords.latitude, lng: p.coords.longitude }), () => {}, { enableHighAccuracy: true });
+    }
+    const today = new Date();
+    const weekStart = new Date(weekStats.weekStart);
+    if ((today - weekStart) / 86400000 > 7) {
+      setWeekStats({ calls: 0, leads: 0, demos: 0, closed: 0, weekStart: today.toISOString().split('T')[0] });
+    }
+  }, []);
+
+  useEffect(() => { localStorage.setItem(APPOINTMENTS_KEY, JSON.stringify(appointments)); }, [appointments]);
+  useEffect(() => { localStorage.setItem(STATS_KEY, JSON.stringify(weekStats)); }, [weekStats]);
+
+  async function loadData() {
+    setLoading(true);
+    let saved = [];
+    try { saved = JSON.parse(localStorage.getItem(ACTIVE_KEY)) || []; } catch(e) { saved = []; }
+    try {
+      const res = await fetch(SHEETS_URL);
+      const json = await res.json();
+      if (json.success && json.data) {
+        const hotels = json.data.map(h => ({
+          nome: h['Nome'] || '', categoria: h['Categoria'] || '', citta: h['Città'] || '',
+          provincia: h['Provincia'] || '', indirizzo: h['Indirizzo'] || '', telefono: h['Telefono'] || '',
+          sito: h['Sito Web'] || '', rating: h['Rating'] || '', placeId: h['Place ID Google'] || '',
+          urlMaps: h['URL Maps'] || '', stage: h['Stage CRM'] || '', valore: Number(h['Valore Stimato €']) || 0,
+          referente: h['Referente'] || '', ultimoContatto: h['Ultimo Contatto'] || '',
+          dataRicontatto: h['Data Ricontatto'] || '', note: h['Note'] || '', motivoPerso: h['Motivo Perso'] || '',
+          lat: Number(h['Lat']) || null, lng: Number(h['Lng']) || null
+        })).filter(h => h.nome);
+        setArchivio(hotels);
+        const active = hotels.filter(h => saved.includes(h.nome)).map(h => ({ ...h, stage: h.stage || 'Lead' }));
+        setAttivi(active);
+        setSource('sheets');
+      }
+    } catch (e) { console.error(e); setSource('error'); }
+    setLoading(false);
+  }
+
+  function addToActive(hotel, stage = 'Lead') {
+    if (attivi.find(h => h.nome === hotel.nome)) return;
+    const defaultDate = new Date();
+    defaultDate.setDate(defaultDate.getDate() + settings.defaultReminderDays);
+    const newHotel = { ...hotel, stage, ultimoContatto: new Date().toISOString().split('T')[0], dataRicontatto: defaultDate.toISOString().split('T')[0] };
+    const newAttivi = [...attivi, newHotel];
+    setAttivi(newAttivi);
+    localStorage.setItem(ACTIVE_KEY, JSON.stringify(newAttivi.map(h => h.nome)));
+    saveToSheets(hotel.nome, { stage, ultimoContatto: newHotel.ultimoContatto, dataRicontatto: newHotel.dataRicontatto });
+    setWeekStats(s => ({ ...s, leads: s.leads + 1 }));
+  }
+
+  function saveHotel(updated, appointment) {
+    let newAttivi = attivi.map(h => h.nome === updated.nome ? updated : h);
+    if (!attivi.find(h => h.nome === updated.nome)) newAttivi.push(updated);
+    setAttivi(newAttivi);
+    localStorage.setItem(ACTIVE_KEY, JSON.stringify(newAttivi.map(h => h.nome)));
+    saveToSheets(updated.nome, { stage: updated.stage, referente: updated.referente, dataRicontatto: updated.dataRicontatto, valore: updated.valore, ultimoContatto: new Date().toISOString().split('T')[0], note: updated.note, motivoPerso: updated.motivoPerso || '' });
+    if (appointment) setAppointments(a => ({ ...a, [updated.nome]: appointment }));
+    if (updated.stage === 'Demo') setWeekStats(s => ({ ...s, demos: s.demos + 1 }));
+    if (updated.stage === 'Chiuso') setWeekStats(s => ({ ...s, closed: s.closed + 1 }));
+    setSelectedHotel(null);
+  }
+
+  async function saveToSheets(nome, fields) {
+    try { await fetch(SHEETS_URL, { method: 'POST', body: JSON.stringify({ action: 'update', nome, fields }) }); } catch (e) { console.error(e); }
+  }
+
+  function recordCall() { setWeekStats(s => ({ ...s, calls: s.calls + 1 })); }
+
+  const stats = useMemo(() => {
+    const verde = attivi.filter(h => getSemaforo(h) === 'verde').length;
+    const arancione = attivi.filter(h => getSemaforo(h) === 'arancione').length;
+    const rosso = attivi.filter(h => getSemaforo(h) === 'rosso').length;
+    const pipeline = attivi.filter(h => !['Chiuso','Perso'].includes(h.stage)).reduce((s,h) => s + (h.valore||0), 0);
+    return { totale: attivi.length, verde, arancione, rosso, pipeline };
+  }, [attivi]);
+
+  const kanbanData = useMemo(() => {
+    const g = {}; STAGES.forEach(s => g[s] = []);
+    attivi.forEach(h => { const st = h.stage || 'Lead'; if (g[st]) g[st].push(h); });
+    return g;
+  }, [attivi]);
+
+  const reminders = useMemo(() => {
+    const scaduti = attivi.filter(h => getSemaforo(h) === 'rosso').sort((a,b) => new Date(a.dataRicontatto) - new Date(b.dataRicontatto));
+    const urgenti = attivi.filter(h => getSemaforo(h) === 'arancione').sort((a,b) => new Date(a.dataRicontatto) - new Date(b.dataRicontatto));
+    const appts = Object.entries(appointments).map(([nome, appt]) => ({ nome, ...appt, hotel: attivi.find(h => h.nome === nome) || archivio.find(h => h.nome === nome) })).filter(a => a.hotel && getDaysUntil(a.data) >= 0).sort((a,b) => new Date(a.data) - new Date(b.data));
+    return { scaduti, urgenti, appointments: appts };
+  }, [attivi, appointments, archivio]);
+
+  const filteredArchive = useMemo(() => {
+    if (search.length < 2) return [];
+    const q = search.toLowerCase();
+    return archivio.filter(h => !attivi.find(a => a.nome === h.nome)).filter(h => h.nome.toLowerCase().includes(q) || h.citta.toLowerCase().includes(q)).slice(0, 50);
+  }, [archivio, attivi, search]);
+
+  const filteredByLocation = useMemo(() => {
+    if (locationSearch.length < 2) return [];
+    const q = locationSearch.toLowerCase();
+    return archivio.filter(h => h.citta.toLowerCase().includes(q) || h.provincia.toLowerCase().includes(q) || h.indirizzo.toLowerCase().includes(q)).slice(0, 50);
+  }, [archivio, locationSearch]);
+
+  const getNearbyHotels = useCallback((lat, lng, exclude) => {
+    return archivio.filter(h => h.lat && h.lng && h.nome !== exclude).map(h => ({ ...h, dist: getDistance(lat, lng, h.lat, h.lng) })).filter(h => h.dist !== null).sort((a,b) => a.dist - b.dist).slice(0, 20);
+  }, [archivio]);
+
+  function startCallList(hotels) { setCallList(hotels); setCallListIndex(0); if (hotels.length > 0) setSelectedHotel(hotels[0]); }
+  function nextCall() { if (callListIndex < callList.length - 1) { setCallListIndex(i => i + 1); setSelectedHotel(callList[callListIndex + 1]); } }
+  function prevCall() { if (callListIndex > 0) { setCallListIndex(i => i - 1); setSelectedHotel(callList[callListIndex - 1]); } }
+  function endCallList() { setCallList([]); setCallListIndex(0); setSelectedHotel(null); }
+
+  if (loading) return <div className="app"><div className="loading"><div className="spinner"></div><p>Caricamento...</p></div></div>;
+
+  return (
+    <div className="app">
+      <aside className="sidebar">
+        <div className="sidebar-header"><div className="logo"><div className="logo-icon">HCS</div><div className="logo-text">Hotel<span>CRM</span></div></div></div>
+        <div className="sidebar-user"><div className="user-avatar">GT</div><div className="user-info"><div className="user-name">Giulio Tifoni</div><div className="user-role">Account Manager</div></div></div>
+        <nav className="sidebar-nav">
+          <div className="nav-section">
+            <div className="nav-section-title">Principale</div>
+            <div className={`nav-item ${activeNav === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveNav('dashboard')}><span className="nav-icon">📊</span><span>Dashboard</span><span className="nav-badge">{attivi.length}</span></div>
+            <div className={`nav-item ${activeNav === 'archivio' ? 'active' : ''}`} onClick={() => setActiveNav('archivio')}><span className="nav-icon">📁</span><span>Archivio</span></div>
+            <div className={`nav-item ${activeNav === 'cerca' ? 'active' : ''}`} onClick={() => setActiveNav('cerca')}><span className="nav-icon">🔍</span><span>Cerca per luogo</span></div>
+            <div className={`nav-item ${activeNav === 'nearby' ? 'active' : ''}`} onClick={() => setActiveNav('nearby')}><span className="nav-icon">📍</span><span>Hotel Vicini</span></div>
+          </div>
+          <div className="nav-section">
+            <div className="nav-section-title">Strumenti</div>
+            <div className={`nav-item ${activeNav === 'stats' ? 'active' : ''}`} onClick={() => setActiveNav('stats')}><span className="nav-icon">📈</span><span>Statistiche</span></div>
+            <div className="nav-item" onClick={() => setShowSettings(true)}><span className="nav-icon">⚙️</span><span>Impostazioni</span></div>
+          </div>
+          <div className="nav-section">
+            <div className="nav-section-title">Alert</div>
+            <div className="nav-item" onClick={() => setActiveNav('dashboard')}><span className="nav-icon">🔴</span><span>Scaduti</span>{reminders.scaduti.length > 0 && <span className="nav-dot danger"></span>}</div>
+            <div className="nav-item" onClick={() => setActiveNav('dashboard')}><span className="nav-icon">📅</span><span>Appuntamenti</span>{reminders.appointments.length > 0 && <span className="nav-badge">{reminders.appointments.length}</span>}</div>
+          </div>
+        </nav>
+        <div className="sidebar-footer"><div className={`sync-status ${source === 'sheets' ? '' : 'error'}`}><span>{source === 'sheets' ? '🟢' : '🔴'}</span><span>{source === 'sheets' ? 'Connesso' : 'Offline'}</span></div></div>
+      </aside>
+
+      <main className="main">
+        {callList.length > 0 && (
+          <div className="call-list-bar">
+            <div className="call-list-info">📞 Lista chiamate: {callListIndex + 1} di {callList.length}</div>
+            <div className="call-list-nav">
+              <button className="btn btn-sm btn-secondary" onClick={prevCall} disabled={callListIndex === 0}>← Prec</button>
+              <button className="btn btn-sm btn-secondary" onClick={nextCall} disabled={callListIndex === callList.length - 1}>Succ →</button>
+              <button className="btn btn-sm btn-danger" onClick={endCallList}>✕ Chiudi</button>
+            </div>
+          </div>
+        )}
+
+        <header className="header">
+          <div className="header-left">
+            <h1>{activeNav === 'dashboard' ? 'Dashboard' : activeNav === 'archivio' ? 'Archivio' : activeNav === 'cerca' ? 'Cerca per luogo' : activeNav === 'nearby' ? 'Hotel Vicini' : 'Statistiche'}</h1>
+            <p>{activeNav === 'dashboard' ? 'Pipeline commerciale' : activeNav === 'archivio' ? archivio.length + ' strutture' : ''}</p>
+          </div>
+          <div className="header-actions">
+            <button className="btn btn-secondary" onClick={loadData}>🔄 Sync</button>
+            {activeNav === 'cerca' && filteredByLocation.length > 0 && <button className="btn btn-primary" onClick={() => startCallList(filteredByLocation.slice(0, 20))}>📞 Chiama tutti ({Math.min(20, filteredByLocation.length)})</button>}
+          </div>
+        </header>
+
+        <div className="content">
+          <div className="content-main">
+            {activeNav === 'dashboard' && <>
+              <div className="stats-row">
+                <div className="stat-card primary"><div className="stat-value">{stats.totale}</div><div className="stat-label">Attivi</div></div>
+                <div className="stat-card success"><div className="stat-value">{stats.verde}</div><div className="stat-label">OK</div></div>
+                <div className="stat-card warning"><div className="stat-value">{stats.arancione}</div><div className="stat-label">Presto</div></div>
+                <div className="stat-card danger"><div className="stat-value">{stats.rosso}</div><div className="stat-label">Scaduti</div></div>
+                <div className="stat-card purple"><div className="stat-value">€{(stats.pipeline/1000).toFixed(0)}k</div><div className="stat-label">Pipeline</div></div>
+              </div>
+              <div className="tabs">
+                <div className={`tab ${activeView === 'kanban' ? 'active' : ''}`} onClick={() => setActiveView('kanban')}>📊 Kanban</div>
+                <div className={`tab ${activeView === 'lista' ? 'active' : ''}`} onClick={() => setActiveView('lista')}>📋 Lista</div>
+                <div className={`tab ${activeView === 'mappa' ? 'active' : ''}`} onClick={() => setActiveView('mappa')}>🗺️ Mappa</div>
+              </div>
+              {attivi.length === 0 ? (
+                <div className="empty-state"><div className="empty-icon">🏨</div><div className="empty-title">Nessun hotel attivo</div><div className="empty-text">Vai in Archivio per aggiungere hotel</div><button className="btn btn-primary" onClick={() => setActiveNav('archivio')}>📁 Archivio</button></div>
+              ) : activeView === 'kanban' ? (
+                <div className="kanban">
+                  {STAGES.map(stage => (
+                    <div key={stage} className="kanban-col">
+                      <div className={`kanban-header ${stage.toLowerCase()}`}><span className="kanban-title">{stage}</span><span className="kanban-count">{(kanbanData[stage] || []).length}</span></div>
+                      <div className="kanban-body">
+                        {(kanbanData[stage] || []).map(h => (
+                          <div key={h.nome} className={`hotel-row ${getSemaforo(h)}`} onClick={() => setSelectedHotel(h)}>
+                            <div className="hotel-row-name">{h.nome}</div>
+                            <div className="hotel-row-meta">📍 {h.citta}</div>
+                            <div className="hotel-row-tags">
+                              {h.valore > 0 && <span className="tag valore">€{(h.valore/1000).toFixed(0)}k</span>}
+                              {h.dataRicontatto && <span className="tag data">{formatDate(h.dataRicontatto)}</span>}
+                              {appointments[h.nome] && <span className="tag appt">📅</span>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : activeView === 'lista' ? (
+                <div className="list-view">
+                  {attivi.map(h => (
+                    <div key={h.nome} className={`list-card ${getSemaforo(h)}`} onClick={() => setSelectedHotel(h)}>
+                      <div className="list-card-info"><div className="list-card-name">{h.nome}</div><div className="list-card-meta">📍 {h.citta} • {h.categoria} • {h.stage}</div></div>
+                      <div className="hotel-row-tags">
+                        {h.valore > 0 && <span className="tag valore">€{(h.valore/1000).toFixed(0)}k</span>}
+                        {appointments[h.nome] && <span className="tag appt">📅 {formatDate(appointments[h.nome].data)}</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <div className="empty-icon">🗺️</div><div className="empty-title">Mappa Hotel</div>
+                  <button className="btn btn-primary" onClick={() => { const coords = attivi.filter(h => h.lat && h.lng).slice(0, 10).map(h => h.lat + ',' + h.lng).join('/'); if (coords) window.open('https://www.google.com/maps/dir/' + coords, '_blank'); }}>🗺️ Apri Giro Ottimizzato</button>
+                </div>
+              )}
+            </>}
+
+            {activeNav === 'archivio' && <>
+              <div className="search-bar"><input className="search-input" placeholder="🔍 Cerca per nome o città..." value={search} onChange={e => setSearch(e.target.value)} /></div>
+              {search.length < 2 ? (
+                <div className="empty-state"><div className="empty-icon">🔍</div><div className="empty-title">Cerca nell'archivio</div><div className="empty-text">{archivio.length} strutture disponibili</div></div>
+              ) : (
+                <div className="list-view">
+                  {filteredArchive.map(h => (
+                    <div key={h.nome} className="list-card" style={{cursor: 'default'}}>
+                      <div className="list-card-info"><div className="list-card-name">{h.nome}</div><div className="list-card-meta">📍 {h.citta} • {h.categoria} {h.rating && '• ⭐' + h.rating}</div></div>
+                      <button className="btn btn-success btn-sm" onClick={() => { addToActive(h); setActiveNav('dashboard'); }}>+ Lead</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>}
+
+            {activeNav === 'cerca' && <>
+              <div className="search-bar"><input className="search-input" placeholder="🔍 Cerca per luogo (es. Segrate, Brescia, MI)..." value={locationSearch} onChange={e => setLocationSearch(e.target.value)} /></div>
+              {locationSearch.length < 2 ? (
+                <div className="empty-state"><div className="empty-icon">📍</div><div className="empty-title">Cerca per luogo</div><div className="empty-text">Digita città, provincia o indirizzo</div></div>
+              ) : <>
+                <p style={{marginBottom: 12, color: 'var(--text-secondary)', fontSize: 13}}>{filteredByLocation.length} hotel trovati • <button className="btn btn-sm btn-primary" style={{marginLeft: 8}} onClick={() => startCallList(filteredByLocation.slice(0, 20))}>📞 Avvia lista chiamate</button></p>
+                <div className="list-view">
+                  {filteredByLocation.map(h => {
+                    const isActive = attivi.find(a => a.nome === h.nome);
+                    return (
+                      <div key={h.nome} className={`list-card ${isActive ? getSemaforo(isActive) : ''}`}>
+                        <div className="list-card-info"><div className="list-card-name">{h.nome}</div><div className="list-card-meta">📍 {h.citta} • {h.categoria} {h.telefono && '• 📞 ' + h.telefono}</div></div>
+                        {isActive ? <span className="tag valore">{isActive.stage}</span> : (
+                          <div style={{display: 'flex', gap: 6}}>
+                            <button className="btn btn-sm btn-secondary" onClick={() => { window.location.href = 'tel:' + h.telefono; recordCall(); }}>📞</button>
+                            <button className="btn btn-sm btn-success" onClick={() => addToActive(h)}>+ Lead</button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </>}
+            </>}
+
+            {activeNav === 'nearby' && <>
+              {!userPos ? (
+                <div className="empty-state"><div className="empty-icon">📍</div><div className="empty-title">GPS non disponibile</div><div className="empty-text">Attiva la localizzazione</div></div>
+              ) : (
+                <div className="list-view">
+                  {getNearbyHotels(userPos.lat, userPos.lng, null).map(h => {
+                    const isActive = attivi.find(a => a.nome === h.nome);
+                    return (
+                      <div key={h.nome} className={`list-card ${isActive ? getSemaforo(isActive) : ''}`} onClick={() => setSelectedHotel(h)}>
+                        <div className="list-card-info"><div className="list-card-name">{h.nome}</div><div className="list-card-meta">📍 {h.citta} • {h.categoria}</div></div>
+                        <span style={{fontWeight: 700, color: 'var(--primary)', marginRight: 10}}>{formatDist(h.dist)}</span>
+                        <button className="btn btn-sm btn-secondary" onClick={e => { e.stopPropagation(); window.open(h.urlMaps, '_blank'); }}>🗺️</button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>}
+
+            {activeNav === 'stats' && (
+              <div style={{maxWidth: 500}}>
+                <h3 style={{marginBottom: 16}}>📈 Statistiche Settimanali</h3>
+                <div className="stats-row" style={{flexDirection: 'column', gap: 10}}>
+                  <div className="stat-card primary" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}><div><div className="stat-label">Chiamate effettuate</div></div><div className="stat-value">{weekStats.calls}</div></div>
+                  <div className="stat-card success" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}><div><div className="stat-label">Nuovi Lead</div></div><div className="stat-value">{weekStats.leads}</div></div>
+                  <div className="stat-card warning" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}><div><div className="stat-label">Demo fatte</div></div><div className="stat-value">{weekStats.demos}</div></div>
+                  <div className="stat-card purple" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}><div><div className="stat-label">Contratti chiusi</div></div><div className="stat-value">{weekStats.closed}</div></div>
+                </div>
+                <p style={{marginTop: 16, fontSize: 12, color: 'var(--text-secondary)'}}>Settimana iniziata: {formatDate(weekStats.weekStart)}</p>
+              </div>
+            )}
+          </div>
+
+          {activeNav === 'dashboard' && (
+            <aside className="right-sidebar">
+              <div className="right-header"><h3 className="right-title">🔔 Reminder</h3></div>
+              <div className="right-body">
+                {reminders.appointments.length > 0 && (
+                  <div className="right-section">
+                    <div className="right-section-title">📅 Appuntamenti ({reminders.appointments.length})</div>
+                    {reminders.appointments.slice(0, 5).map(a => (
+                      <div key={a.nome} className="reminder-card appointment" onClick={() => setSelectedHotel(a.hotel)}>
+                        <div className="reminder-card-name">{a.nome}</div>
+                        <div className="reminder-card-info">{a.tipo} • 📍 {a.hotel?.citta}</div>
+                        <div className="reminder-card-date">{formatDateTime(a.data, a.ora)}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {reminders.scaduti.length > 0 && (
+                  <div className="right-section">
+                    <div className="right-section-title">🔴 Scaduti ({reminders.scaduti.length})</div>
+                    {reminders.scaduti.slice(0, 5).map(h => (
+                      <div key={h.nome} className="reminder-card danger" onClick={() => setSelectedHotel(h)}>
+                        <div className="reminder-card-name">{h.nome}</div>
+                        <div className="reminder-card-info">📍 {h.citta} • {h.stage}</div>
+                        <div className="reminder-card-date">Scaduto da {Math.abs(getDaysUntil(h.dataRicontatto))}gg</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {reminders.urgenti.length > 0 && (
+                  <div className="right-section">
+                    <div className="right-section-title">🟠 Urgenti ({reminders.urgenti.length})</div>
+                    {reminders.urgenti.slice(0, 5).map(h => (
+                      <div key={h.nome} className="reminder-card warning" onClick={() => setSelectedHotel(h)}>
+                        <div className="reminder-card-name">{h.nome}</div>
+                        <div className="reminder-card-info">📍 {h.citta} • {h.stage}</div>
+                        <div className="reminder-card-date">Tra {getDaysUntil(h.dataRicontatto)}gg</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {reminders.scaduti.length === 0 && reminders.urgenti.length === 0 && reminders.appointments.length === 0 && (
+                  <div style={{textAlign: 'center', padding: 30, color: 'var(--text-secondary)'}}><div style={{fontSize: 32, marginBottom: 8}}>✅</div><div>Tutto in regola!</div></div>
+                )}
+              </div>
+            </aside>
+          )}
+        </div>
+      </main>
+
+      {selectedHotel && <HotelModal hotel={selectedHotel} settings={settings} appointment={appointments[selectedHotel.nome]} isActive={!!attivi.find(h => h.nome === selectedHotel.nome)} onClose={() => setSelectedHotel(null)} onSave={saveHotel} onAddLead={addToActive} onRecordCall={recordCall} getNearbyHotels={getNearbyHotels} onSelectHotel={setSelectedHotel} />}
+      {showSettings && <SettingsPanel settings={settings} onClose={() => setShowSettings(false)} onSave={s => { setSettings(s); localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); setShowSettings(false); }} />}
+    </div>
+  );
+}
+
+function HotelModal({ hotel, settings, appointment, isActive, onClose, onSave, onAddLead, onRecordCall, getNearbyHotels, onSelectHotel }) {
+  const [form, setForm] = useState({ stage: hotel.stage || 'Lead', referente: hotel.referente || '', dataRicontatto: hotel.dataRicontatto || '', valore: hotel.valore || '', note: hotel.note || '', motivoPerso: hotel.motivoPerso || '' });
+  const [appt, setAppt] = useState(appointment || { data: '', ora: '', tipo: 'Visita' });
+  const [isRecording, setIsRecording] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const recognitionRef = useRef(null);
+
+  const nearbyHotels = useMemo(() => {
+    if (!hotel.lat || !hotel.lng) return [];
+    return getNearbyHotels(hotel.lat, hotel.lng, hotel.nome).slice(0, 5);
+  }, [hotel, getNearbyHotels]);
+
+  function handleStageChange(newStage) {
+    let days = settings.defaultReminderDays;
+    if (newStage === 'Contattato') days = settings.afterFirstCallDays;
+    if (newStage === 'Demo') days = settings.afterDemoDays;
+    if (newStage === 'Proposta') days = settings.afterProposalDays;
+    const newDate = new Date();
+    newDate.setDate(newDate.getDate() + days);
+    setForm({ ...form, stage: newStage, dataRicontatto: newDate.toISOString().split('T')[0] });
+  }
+
+  function handleSave() {
+    const hasAppointment = appt.data && appt.ora;
+    onSave({ ...hotel, ...form, valore: Number(form.valore) || 0 }, hasAppointment ? appt : null);
+  }
+
+  function handleCall() { if (hotel.telefono) { window.location.href = 'tel:' + hotel.telefono; onRecordCall(); } }
+
+  function toggleRecording() {
+    if (isRecording) {
+      if (recognitionRef.current) recognitionRef.current.stop();
+      setIsRecording(false);
+      if (transcript) setForm(f => ({ ...f, note: f.note ? f.note + '\n\n' + transcript : transcript }));
+    } else {
+      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.lang = 'it-IT';
+        recognitionRef.current.continuous = true;
+        recognitionRef.current.interimResults = true;
+        recognitionRef.current.onresult = e => { let t = ''; for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript; setTranscript(t); };
+        recognitionRef.current.onerror = () => setIsRecording(false);
+        recognitionRef.current.start();
+        setIsRecording(true);
+        setTranscript('');
+      } else { alert('Registrazione vocale non supportata'); }
+    }
+  }
+
+  function openCalendar() { if (appt.data) window.open(createCalendarUrl(hotel, appt), '_blank'); }
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <div><div className="modal-title">{hotel.nome}</div><div className="modal-subtitle">📍 {hotel.citta} • {hotel.categoria}</div></div>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body">
+          <div className="quick-actions">
+            <div className="quick-action" onClick={handleCall}><span className="quick-action-icon">📞</span><span className="quick-action-label">Chiama</span></div>
+            <div className="quick-action" onClick={() => window.open(hotel.urlMaps || 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(hotel.nome + ' ' + hotel.citta), '_blank')}><span className="quick-action-icon">🗺️</span><span className="quick-action-label">Naviga</span></div>
+            <div className="quick-action" onClick={() => hotel.sito && window.open(hotel.sito, '_blank')}><span className="quick-action-icon">🌐</span><span className="quick-action-label">Sito</span></div>
+            <div className={`quick-action ${isRecording ? 'recording' : ''}`} onClick={toggleRecording}><span className="quick-action-icon">{isRecording ? '⏹️' : '🎤'}</span><span className="quick-action-label">{isRecording ? 'Stop' : 'Registra'}</span></div>
+            <div className="quick-action" onClick={openCalendar} style={{opacity: appt.data ? 1 : 0.5}}><span className="quick-action-icon">📅</span><span className="quick-action-label">Calendar</span></div>
+          </div>
+
+          {isRecording && <div style={{background: 'var(--danger-light)', padding: 10, borderRadius: 8, marginBottom: 12, fontSize: 13}}>🎤 <strong>Registrando...</strong> {transcript && <span style={{color: 'var(--text-secondary)'}}>{transcript.slice(-100)}</span>}</div>}
+
+          {isActive ? <>
+            <div className="form-group">
+              <label className="form-label">Stage</label>
+              <div className="stage-grid">{STAGES.map(s => <div key={s} className={`stage-opt ${form.stage === s ? 'active' : ''}`} onClick={() => handleStageChange(s)}>{s}</div>)}</div>
+            </div>
+            {form.stage === 'Perso' && <div className="motivo-perso"><label className="form-label">Motivo Perso</label><select className="form-input" value={form.motivoPerso} onChange={e => setForm({...form, motivoPerso: e.target.value})}><option value="">Seleziona...</option>{MOTIVI_PERSO.map(m => <option key={m} value={m}>{m}</option>)}</select></div>}
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">Referente</label><input className="form-input" placeholder="Nome" value={form.referente} onChange={e => setForm({...form, referente: e.target.value})} /></div>
+              <div className="form-group"><label className="form-label">Valore €</label><input className="form-input" type="number" placeholder="0" value={form.valore} onChange={e => setForm({...form, valore: e.target.value})} /></div>
+            </div>
+            <div className="form-group"><label className="form-label">Data Ricontatto</label><input className="form-input" type="date" value={form.dataRicontatto} onChange={e => setForm({...form, dataRicontatto: e.target.value})} /></div>
+            <div style={{background: 'var(--pink-light)', padding: 12, borderRadius: 8, marginBottom: 12}}>
+              <label className="form-label" style={{color: 'var(--pink)'}}>📅 Appuntamento</label>
+              <div className="form-row" style={{marginBottom: 0}}>
+                <input className="form-input" type="date" value={appt.data} onChange={e => setAppt({...appt, data: e.target.value})} />
+                <input className="form-input" type="time" value={appt.ora} onChange={e => setAppt({...appt, ora: e.target.value})} />
+                <select className="form-input" value={appt.tipo} onChange={e => setAppt({...appt, tipo: e.target.value})}><option>Visita</option><option>Videocall</option><option>Telefonata</option></select>
+              </div>
+            </div>
+            <div className="form-group"><label className="form-label">Note</label><textarea className="form-input" placeholder="Appunti..." value={form.note} onChange={e => setForm({...form, note: e.target.value})} /></div>
+          </> : <div style={{textAlign: 'center', padding: 20}}><p style={{marginBottom: 16, color: 'var(--text-secondary)'}}>Questo hotel non è ancora nella tua pipeline</p><button className="btn btn-success" onClick={() => { onAddLead(hotel); onClose(); }}>+ Aggiungi come Lead</button></div>}
+
+          {nearbyHotels.length > 0 && <div style={{marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border)'}}><label className="form-label">📍 Hotel vicini a questo</label>{nearbyHotels.map(h => <div key={h.nome} style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border)', cursor: 'pointer'}} onClick={() => onSelectHotel(h)}><div><div style={{fontSize: 13, fontWeight: 600}}>{h.nome}</div><div style={{fontSize: 11, color: 'var(--text-secondary)'}}>{h.citta}</div></div><span style={{fontSize: 12, fontWeight: 700, color: 'var(--primary)'}}>{formatDist(h.dist)}</span></div>)}</div>}
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-secondary" onClick={onClose}>Chiudi</button>
+          {isActive && <button className="btn btn-primary" onClick={handleSave}>💾 Salva</button>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SettingsPanel({ settings, onClose, onSave }) {
+  const [form, setForm] = useState(settings);
+  const [showReset, setShowReset] = useState(false);
+
+  function handleReset() {
+    if (!confirm('⚠️ Sei sicuro di voler resettare il CRM?')) return;
+    if (!confirm('⚠️ ATTENZIONE: Perderai TUTTI gli hotel attivi, appuntamenti e statistiche. Confermi?')) return;
+    const input = prompt('Per confermare, scrivi RESET in maiuscolo:');
+    if (input !== 'RESET') { alert('Reset annullato.'); return; }
+    localStorage.removeItem('hcs_active_hotels');
+    localStorage.removeItem('hcs_appointments');
+    localStorage.removeItem('hcs_stats');
+    alert('Reset completato. La pagina si ricaricherà.');
+    window.location.reload();
+  }
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()} style={{maxWidth: 400}}>
+        <div className="modal-header"><div className="modal-title">⚙️ Impostazioni</div><button className="modal-close" onClick={onClose}>✕</button></div>
+        <div className="modal-body">
+          <p style={{fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16}}>Tempi di ricontatto default (giorni)</p>
+          <div className="form-group"><label className="form-label">Nuovo Lead</label><input className="form-input" type="number" value={form.defaultReminderDays} onChange={e => setForm({...form, defaultReminderDays: Number(e.target.value)})} /></div>
+          <div className="form-group"><label className="form-label">Dopo prima chiamata</label><input className="form-input" type="number" value={form.afterFirstCallDays} onChange={e => setForm({...form, afterFirstCallDays: Number(e.target.value)})} /></div>
+          <div className="form-group"><label className="form-label">Dopo demo</label><input className="form-input" type="number" value={form.afterDemoDays} onChange={e => setForm({...form, afterDemoDays: Number(e.target.value)})} /></div>
+          <div className="form-group"><label className="form-label">Dopo proposta</label><input className="form-input" type="number" value={form.afterProposalDays} onChange={e => setForm({...form, afterProposalDays: Number(e.target.value)})} /></div>
+          <div style={{marginTop: 40, paddingTop: 16, borderTop: '1px solid var(--border)'}}>
+            {!showReset ? <p style={{fontSize: 11, color: '#cbd5e1', cursor: 'pointer', textAlign: 'center'}} onClick={() => setShowReset(true)}>Opzioni avanzate...</p> : (
+              <div style={{textAlign: 'center'}}><p style={{fontSize: 11, color: '#cbd5e1', marginBottom: 8}}>Cancella tutti i dati locali</p><button className="btn btn-sm" style={{background: '#cbd5e1', color: '#475569', fontSize: 11}} onClick={handleReset}>Reset CRM</button></div>
+            )}
+          </div>
+        </div>
+        <div className="modal-footer"><button className="btn btn-secondary" onClick={onClose}>Annulla</button><button className="btn btn-primary" onClick={() => onSave(form)}>💾 Salva</button></div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
