@@ -1,0 +1,18 @@
+{
+  "name": "HCS CRM Hotel",
+  "short_name": "HCS CRM",
+  "description": "CRM per gestione hotel e strutture sanitarie",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#F5F7FA",
+  "theme_color": "#3B82F6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
